@@ -1,11 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const sectionIds = [
+  "tecnologia",
+  "simulacion",
+  "evidencia",
+  "smart-spray",
+  "colaboracion",
+];
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -13,12 +22,34 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        setActiveSection(entry.target.id);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(handleObserver, {
+      rootMargin: "-40% 0px -40% 0px",
+      threshold: 0,
+    });
+
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [handleObserver]);
+
   const navItems = [
-    { label: "Tecnología", href: "#tecnologia" },
-    { label: "Simulación", href: "#simulacion" },
-    { label: "Evidencia", href: "#evidencia" },
-    { label: "Smart Spray", href: "#smart-spray" },
-    { label: "Colaboración", href: "#colaboracion" },
+    { label: "Tecnología", href: "#tecnologia", id: "tecnologia" },
+    { label: "Simulación", href: "#simulacion", id: "simulacion" },
+    { label: "Evidencia", href: "#evidencia", id: "evidencia" },
+    { label: "Smart Spray", href: "#smart-spray", id: "smart-spray" },
+    { label: "Colaboración", href: "#colaboracion", id: "colaboracion" },
   ];
 
   return (
@@ -49,7 +80,11 @@ export default function Header() {
             <a
               key={item.href}
               href={item.href}
-              className="text-sm text-foreground/60 hover:text-precisur-green transition-colors duration-300 font-medium"
+              className={`text-sm font-medium transition-colors duration-300 ${
+                activeSection === item.id
+                  ? "text-precisur-green"
+                  : "text-foreground/60 hover:text-precisur-green"
+              }`}
             >
               {item.label}
             </a>
@@ -96,7 +131,11 @@ export default function Header() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMenuOpen(false)}
-                  className="text-foreground/70 hover:text-precisur-green transition-colors"
+                  className={`transition-colors ${
+                    activeSection === item.id
+                      ? "text-precisur-green"
+                      : "text-foreground/70 hover:text-precisur-green"
+                  }`}
                 >
                   {item.label}
                 </a>

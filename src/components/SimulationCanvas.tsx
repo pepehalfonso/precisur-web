@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, useEffect } from "react";
+import { useRef, useMemo, useEffect, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -8,6 +8,18 @@ interface SimulationProps {
   windSpeed: number;
   height: number;
   dropSize: number;
+}
+
+function checkWebGL(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    const canvas = document.createElement("canvas");
+    return !!(
+      canvas.getContext("webgl") || canvas.getContext("webgl2")
+    );
+  } catch {
+    return false;
+  }
 }
 
 function Droplets({ windSpeed, height, dropSize }: SimulationProps) {
@@ -138,11 +150,41 @@ function TargetZone() {
   );
 }
 
+function WebGLFallback() {
+  return (
+    <div className="w-full h-full rounded-lg overflow-hidden relative">
+      <div className="absolute inset-0 bg-gradient-to-br from-precisur-dark-700 via-precisur-dark-800 to-precisur-dark-900" />
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6">
+        <div className="w-full max-w-xs h-32 relative">
+          <div className="absolute bottom-0 left-1/4 w-16 h-20 bg-precisur-green/20 rounded-full blur-sm" />
+          <div className="absolute bottom-0 left-1/2 w-12 h-16 bg-precisur-yellow/15 rounded-full blur-sm" />
+          <div className="absolute bottom-0 right-1/4 w-8 h-12 bg-precisur-red/20 rounded-full blur-sm" />
+          <div className="absolute top-0 left-1/3 w-1 h-24 bg-precisur-cyan/30 rotate-12 origin-bottom" />
+          <div className="absolute top-2 left-1/2 w-1 h-20 bg-precisur-cyan/20 -rotate-6 origin-bottom" />
+        </div>
+        <p className="text-xs text-foreground/30 font-mono text-center">
+          Simulación conceptual · Requiere WebGL
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function SimulationCanvas({
   windSpeed,
   height,
   dropSize,
 }: SimulationProps) {
+  const [hasWebGL, setHasWebGL] = useState(true);
+
+  useEffect(() => {
+    setHasWebGL(checkWebGL());
+  }, []);
+
+  if (!hasWebGL) {
+    return <WebGLFallback />;
+  }
+
   return (
     <Canvas
       camera={{ position: [5, 4, 5], fov: 40 }}

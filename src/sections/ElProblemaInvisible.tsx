@@ -44,6 +44,7 @@ function SliderControl({
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
+        aria-label={label}
         className="w-full h-1 bg-precisur-dark-600 rounded-full appearance-none cursor-pointer accent-precisur-green"
       />
     </div>
@@ -66,79 +67,86 @@ export default function ElProblemaInvisible() {
   return (
     <section
       id="problema"
-      className="relative min-h-screen flex items-center py-24 bg-precisur-dark-800"
+      className="relative min-h-screen py-24 bg-precisur-dark-800"
     >
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-        <SectionReveal>
-          <div>
-            <span className="text-xs font-mono text-precisur-red uppercase tracking-widest mb-4 block">
-              El Problema Invisible
-            </span>
-            <h2 className="font-heading text-4xl md:text-5xl font-bold mb-6 leading-tight">
-              PEQUEÑAS DECISIONES
-              <br />
-              <span className="text-foreground/50">PRODUCEN</span>
-              <br />
-              <span className="text-precisur-red">
-                GRANDES DIFERENCIAS ESPACIALES
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+          <SectionReveal>
+            <div className="lg:sticky lg:top-24">
+              <span className="text-xs font-mono text-precisur-red uppercase tracking-widest mb-4 block">
+                El Problema Invisible
               </span>
-            </h2>
-            <p className="text-foreground/60 text-lg leading-relaxed max-w-lg mb-8">
-              Modificar la velocidad del viento, la altura de aplicación o el
-              tamaño de gota cambia completamente el comportamiento de la
-              nube de partículas. Arrastrar producto fuera del área objetivo
-              tiene consecuencias reales.
-            </p>
+              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold mb-6 leading-tight">
+                PEQUEÑAS DECISIONES
+                <br />
+                <span className="text-foreground/50">PRODUCEN</span>
+                <br />
+                <span className="text-precisur-red">
+                  GRANDES DIFERENCIAS ESPACIALES
+                </span>
+              </h2>
+              <p className="text-foreground/60 text-lg leading-relaxed max-w-lg mb-8">
+                Modificar la velocidad del viento, la altura de aplicación o el
+                tamaño de gota cambia completamente el comportamiento de la
+                nube de partículas. Arrastrar producto fuera del área objetivo
+                tiene consecuencias reales.
+              </p>
 
-            <div className="space-y-5 bg-precisur-dark-900/50 p-6 rounded-lg border border-precisur-dark-600/30">
-              <SliderControl
-                label="Velocidad del viento"
-                value={windSpeed}
-                onChange={setWindSpeed}
-                min={0}
-                max={40}
-                unit=" km/h"
-                color="text-precisur-cyan"
-              />
-              <SliderControl
-                label="Altura de aplicación"
-                value={height}
-                onChange={setHeight}
-                min={1}
-                max={8}
-                unit=" m"
-                color="text-precisur-yellow"
-              />
-              <SliderControl
-                label="Tamaño de gota (VMD)"
-                value={dropSize}
-                onChange={setDropSize}
-                min={100}
-                max={500}
-                unit=" μm"
-                color="text-precisur-green"
-              />
+              <div className="space-y-5 bg-precisur-dark-900/50 p-6 rounded-lg border border-precisur-dark-600/30">
+                <SliderControl
+                  label="Velocidad del viento"
+                  value={windSpeed}
+                  onChange={setWindSpeed}
+                  min={0}
+                  max={40}
+                  unit=" km/h"
+                  color="text-precisur-cyan"
+                />
+                <SliderControl
+                  label="Altura de aplicación"
+                  value={height}
+                  onChange={setHeight}
+                  min={1}
+                  max={8}
+                  unit=" m"
+                  color="text-precisur-yellow"
+                />
+                <SliderControl
+                  label="Tamaño de gota (VMD)"
+                  value={dropSize}
+                  onChange={setDropSize}
+                  min={100}
+                  max={500}
+                  unit=" μm"
+                  color="text-precisur-green"
+                />
+              </div>
+
+              <p className="mt-4 text-xs text-foreground/30 font-mono">
+                * Simulación educativa. Valores representativos, no constituyen
+                precisión experimental.
+              </p>
             </div>
-          </div>
-        </SectionReveal>
+          </SectionReveal>
 
-        <SectionReveal delay={0.2}>
-          <div className="relative aspect-square max-w-lg mx-auto">
-            <Suspense fallback={<CanvasFallback />}>
-              <SimulationCanvas
-                windSpeed={windSpeed}
-                height={height}
-                dropSize={dropSize}
-              />
-            </Suspense>
+          <SectionReveal delay={0.2}>
+            <div className="relative aspect-square max-w-lg mx-auto lg:sticky lg:top-24">
+              <Suspense fallback={<CanvasFallback />}>
+                <SimulationCanvas
+                  windSpeed={windSpeed}
+                  height={height}
+                  dropSize={dropSize}
+                />
+              </Suspense>
 
-            <div className="absolute bottom-4 left-4 right-4 flex justify-between text-xs font-mono text-foreground/30">
-              <span>● Verde: en área objetivo</span>
-              <span>● Amarillo: riesgo</span>
-              <span>● Rojo: fuera de área</span>
+              <div className="absolute bottom-4 left-4 right-4 flex justify-between text-xs font-mono text-foreground/30">
+                <span>● Verde: en área objetivo</span>
+                <span>● Amarillo: riesgo</span>
+                <span>● Rojo: fuera de área</span>
+              </div>
             </div>
-          </div>
-        </SectionReveal>
+          </SectionReveal>
+        </div>
       </div>
     </section>
   );

@@ -34,6 +34,13 @@ const timeline = [
   { step: "VALIDACIÓN", color: "text-precisur-green" },
 ];
 
+const counters = [
+  { end: 934, label: "Pruebas Automatizadas", desc: "Convergencia, invariantes, causalidad y estrés" },
+  { end: 0, label: "Errores de Análisis", desc: "Zero regressions en el motor físico" },
+  { end: 1, label: "Motor Físico Canónico", desc: "Una única fuente activa de simulación", duration: 1 },
+  { end: 8, label: "Correcciones Críticas", desc: "Bugs detectados y corregidos en auditoría", duration: 1.5 },
+];
+
 export default function Evidencia() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
@@ -65,10 +72,18 @@ export default function Evidencia() {
 
         <SectionReveal delay={0.1}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-20">
-            <Counter end={934} label="Pruebas Automatizadas" />
-            <Counter end={0} label="Errores de Análisis" />
-            <Counter end={1} label="Motor Físico Canónico" duration={1} />
-            <Counter end={8} label="Correcciones Críticas" duration={1.5} />
+            {counters.map((c) => (
+              <div key={c.label} className="flex flex-col items-center">
+                <Counter
+                  end={c.end}
+                  label={c.label}
+                  duration={c.duration}
+                />
+                <p className="mt-2 text-xs text-foreground/30 font-mono text-center max-w-[140px]">
+                  {c.desc}
+                </p>
+              </div>
+            ))}
           </div>
         </SectionReveal>
 

@@ -5,13 +5,14 @@ import { useRef } from "react";
 import SectionReveal from "@/components/SectionReveal";
 
 const nodes = [
-  { label: "METEOROLOGÍA", x: 50, y: 10, color: "#06b6d4" },
-  { label: "SENSORES", x: 20, y: 30, color: "#22c55e" },
-  { label: "SATÉLITES", x: 80, y: 30, color: "#eab308" },
-  { label: "PRECISUR", x: 50, y: 55, color: "#22c55e", main: true },
-  { label: "SIMULAR", x: 25, y: 80, color: "#06b6d4" },
-  { label: "ANALIZAR", x: 50, y: 80, color: "#8b5cf6" },
-  { label: "OPTIMIZAR", x: 75, y: 80, color: "#f97316" },
+  { label: "METEOROLOGÍA", x: 50, y: 8, color: "#06b6d4" },
+  { label: "SENSORES", x: 18, y: 28, color: "#22c55e" },
+  { label: "SATÉLITES", x: 82, y: 28, color: "#eab308" },
+  { label: "PRECISUR", x: 50, y: 50, color: "#22c55e", main: true },
+  { label: "SIMULAR", x: 22, y: 74, color: "#06b6d4" },
+  { label: "ANALIZAR", x: 50, y: 74, color: "#8b5cf6" },
+  { label: "OPTIMIZAR", x: 78, y: 74, color: "#f97316" },
+  { label: "DECIDIR", x: 50, y: 94, color: "#22c55e" },
 ];
 
 const connections: [number, number][] = [
@@ -21,7 +22,50 @@ const connections: [number, number][] = [
   [3, 4],
   [3, 5],
   [3, 6],
+  [4, 7],
+  [5, 7],
+  [6, 7],
 ];
+
+function AnimatedLine({
+  x1, y1, x2, y2, delay, inView,
+}: {
+  x1: number; y1: number; x2: number; y2: number; delay: number; inView: boolean;
+}) {
+  const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+
+  return (
+    <g>
+      <motion.line
+        x1={x1} y1={y1} x2={x2} y2={y2}
+        stroke="#1f3b33"
+        strokeWidth="0.3"
+        initial={{ pathLength: 0, opacity: 0 }}
+        animate={inView ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
+        transition={{ duration: 1, delay }}
+      />
+      <motion.circle
+        r="0.8"
+        fill="#22c55e"
+        initial={{ opacity: 0 }}
+        animate={inView ? { opacity: [0, 1, 1, 0] } : { opacity: 0 }}
+        transition={{
+          duration: 2.5,
+          delay: delay + 1,
+          repeat: Infinity,
+          repeatDelay: 3,
+        }}
+      >
+        <animateMotion
+          dur="2.5s"
+          begin={`${delay + 1}s`}
+          repeatCount="indefinite"
+          path={`M${x1},${y1} L${x2},${y2}`}
+        />
+      </motion.circle>
+    </g>
+  );
+}
 
 export default function Ecosistema() {
   const ref = useRef(null);
@@ -58,21 +102,14 @@ export default function Ecosistema() {
               xmlns="http://www.w3.org/2000/svg"
             >
               {connections.map(([from, to], i) => (
-                <motion.line
+                <AnimatedLine
                   key={i}
                   x1={nodes[from].x}
                   y1={nodes[from].y}
                   x2={nodes[to].x}
                   y2={nodes[to].y}
-                  stroke="#1f3b33"
-                  strokeWidth="0.3"
-                  initial={{ pathLength: 0, opacity: 0 }}
-                  animate={
-                    isInView
-                      ? { pathLength: 1, opacity: 1 }
-                      : { pathLength: 0, opacity: 0 }
-                  }
-                  transition={{ duration: 1, delay: 0.5 + i * 0.1 }}
+                  delay={0.5 + i * 0.1}
+                  inView={isInView}
                 />
               ))}
 
@@ -81,22 +118,18 @@ export default function Ecosistema() {
                   <motion.circle
                     cx={node.x}
                     cy={node.y}
-                    r={node.main ? 3 : 2}
+                    r={node.main ? 3 : node.label === "DECIDIR" ? 2.5 : 2}
                     fill={node.color}
                     fillOpacity={0.2}
                     stroke={node.color}
                     strokeWidth={node.main ? 0.5 : 0.3}
                     initial={{ scale: 0, opacity: 0 }}
-                    animate={
-                      isInView
-                        ? { scale: 1, opacity: 1 }
-                        : { scale: 0, opacity: 0 }
-                    }
+                    animate={isInView ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
                     transition={{ duration: 0.6, delay: 0.3 + i * 0.1 }}
                   />
                   <motion.text
                     x={node.x}
-                    y={node.y + (node.main ? 6 : 5)}
+                    y={node.y + (node.main ? 6 : node.label === "DECIDIR" ? 5.5 : 5)}
                     textAnchor="middle"
                     fill={node.color}
                     fontSize="3.5"
