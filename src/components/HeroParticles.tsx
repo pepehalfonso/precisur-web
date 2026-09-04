@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -95,6 +95,17 @@ function WindLines() {
 }
 
 export default function HeroParticles() {
+  const [particleCount, setParticleCount] = useState(300);
+
+  useEffect(() => {
+    const check = () => {
+      setParticleCount(window.innerWidth < 768 ? 120 : 300);
+    };
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
   return (
     <div className="absolute inset-0 z-0">
       <Canvas
@@ -103,7 +114,7 @@ export default function HeroParticles() {
         gl={{ antialias: true, alpha: true }}
         style={{ background: "transparent" }}
       >
-        <Particles count={300} />
+        <Particles count={particleCount} />
         <WindLines />
       </Canvas>
     </div>

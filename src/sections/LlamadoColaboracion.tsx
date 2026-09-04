@@ -74,7 +74,7 @@ export default function LlamadoColaboracion() {
               className="flex flex-col sm:flex-row gap-4 justify-center"
             >
               <a
-                href="mailto:info@precisur.uy"
+                href="mailto:danielmalandevitta09@gmail.com"
                 className="px-6 py-4 md:px-10 md:py-5 bg-precisur-green text-precisur-dark-900 font-heading font-bold text-base md:text-lg rounded hover:bg-precisur-green-dark transition-colors duration-300"
               >
                 EXPLORAR UNA POSIBLE COLABORACIÓN

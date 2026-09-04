@@ -44,7 +44,7 @@ export default function Counter({
       transition={{ duration: 0.6 }}
       className="text-center"
     >
-      <div className="font-mono text-5xl md:text-6xl font-bold text-precisur-green mb-2">
+      <div className="font-mono text-4xl sm:text-5xl md:text-6xl font-bold text-precisur-green mb-2">
         {count}
         {suffix}
       </div>

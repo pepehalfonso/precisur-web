@@ -64,7 +64,7 @@ export default function Evidencia() {
         </SectionReveal>
 
         <SectionReveal delay={0.1}>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-20">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-20">
             <Counter end={934} label="Pruebas Automatizadas" />
             <Counter end={0} label="Errores de Análisis" />
             <Counter end={1} label="Motor Físico Canónico" duration={1} />
@@ -77,7 +77,7 @@ export default function Evidencia() {
             <h3 className="font-heading text-xl font-semibold text-foreground/70 mb-6 text-center uppercase tracking-wider">
               Proceso de Ingeniería
             </h3>
-            <div className="flex flex-wrap justify-center items-center gap-3">
+            <div className="flex flex-wrap justify-center items-center gap-2 md:gap-3">
               {timeline.map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div

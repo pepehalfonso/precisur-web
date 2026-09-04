@@ -37,7 +37,7 @@ export default function LaPregunta() {
             <span className="text-xs font-mono text-precisur-cyan uppercase tracking-widest mb-8 block">
               La Pregunta
             </span>
-            <h2 className="font-heading text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-8">
+            <h2 className="font-heading text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-8">
               <span className="text-foreground/40">¿PODEMOS TOMAR</span>
               <br />
               <span className="text-foreground/40">MEJORES DECISIONES</span>

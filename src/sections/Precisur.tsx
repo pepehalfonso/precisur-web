@@ -69,7 +69,7 @@ export default function Precisur() {
             <SectionReveal key={cap.title} delay={i * 0.1}>
               <motion.div
                 whileHover={{ y: -4 }}
-                className={`p-8 rounded-lg border ${cap.border} ${cap.bg} backdrop-blur-sm transition-colors duration-300`}
+                className={`p-5 md:p-8 rounded-lg border ${cap.border} ${cap.bg} backdrop-blur-sm transition-colors duration-300`}
               >
                 <div className={`text-xs font-mono ${cap.color} uppercase tracking-widest mb-3`}>
                   {cap.title}
