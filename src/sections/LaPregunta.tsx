@@ -61,14 +61,14 @@ export default function LaPregunta() {
               Es complementarla con datos, modelos y análisis de escenarios.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-0">
+            {/* Desktop: horizontal flow */}
+            <div className="hidden sm:flex items-center justify-center gap-0">
               {brechaSteps.map((step, i) => (
-                <div key={step.label} className="flex items-center gap-4">
+                <div key={step.label} className="flex items-center">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={isInView ? { opacity: 1, y: 0 } : {}}
                     transition={{ duration: 0.6, delay: 0.8 + i * 0.2 }}
-                    className="flex flex-col items-center"
                   >
                     <div className={`px-5 py-3 rounded-lg border border-current/20 bg-current/5 ${step.color}`}>
                       <span className="font-mono text-sm font-bold">{step.label}</span>
@@ -79,11 +79,40 @@ export default function LaPregunta() {
                       initial={{ opacity: 0, scaleX: 0 }}
                       animate={isInView ? { opacity: 1, scaleX: 1 } : {}}
                       transition={{ duration: 0.5, delay: 1.0 + i * 0.2 }}
-                      className="flex items-center gap-1 text-foreground/20"
+                      className="flex items-center gap-1 text-foreground/20 mx-2"
                     >
-                      <div className="w-8 sm:w-12 h-px bg-gradient-to-r from-precisur-dark-600 to-foreground/20" />
-                      <span className="text-xs font-mono whitespace-nowrap">brecha</span>
-                      <div className="w-8 sm:w-12 h-px bg-gradient-to-r from-foreground/20 to-precisur-dark-600" />
+                      <div className="w-8 h-px bg-gradient-to-r from-precisur-dark-600 to-foreground/20" />
+                      <span className="text-[10px] font-mono whitespace-nowrap">brecha</span>
+                      <div className="w-8 h-px bg-gradient-to-r from-foreground/20 to-precisur-dark-600" />
+                    </motion.div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Mobile: vertical flow */}
+            <div className="flex sm:hidden flex-col items-center gap-0">
+              {brechaSteps.map((step, i) => (
+                <div key={step.label} className="flex flex-col items-center">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={isInView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ duration: 0.6, delay: 0.8 + i * 0.2 }}
+                  >
+                    <div className={`px-5 py-3 rounded-lg border border-current/20 bg-current/5 ${step.color}`}>
+                      <span className="font-mono text-sm font-bold">{step.label}</span>
+                    </div>
+                  </motion.div>
+                  {i < brechaSteps.length - 1 && (
+                    <motion.div
+                      initial={{ opacity: 0, scaleY: 0 }}
+                      animate={isInView ? { opacity: 1, scaleY: 1 } : {}}
+                      transition={{ duration: 0.4, delay: 1.0 + i * 0.2 }}
+                      className="flex flex-col items-center text-foreground/20 py-1"
+                    >
+                      <div className="w-px h-3 bg-gradient-to-b from-precisur-dark-600 to-foreground/20" />
+                      <span className="text-[10px] font-mono my-0.5">brecha</span>
+                      <div className="w-px h-3 bg-gradient-to-b from-foreground/20 to-precisur-dark-600" />
                     </motion.div>
                   )}
                 </div>

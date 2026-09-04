@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ScrollProgress from "@/components/ScrollProgress";
 import Hero from "@/sections/Hero";
 import ElDesafio from "@/sections/ElDesafio";
 import ElProblemaInvisible from "@/sections/ElProblemaInvisible";
@@ -16,6 +17,7 @@ import LlamadoColaboracion from "@/sections/LlamadoColaboracion";
 export default function Home() {
   return (
     <>
+      <ScrollProgress />
       <Header />
       <main>
         <Hero />

@@ -12,7 +12,7 @@ const nodes = [
   { label: "SIMULAR", x: 22, y: 74, color: "#06b6d4" },
   { label: "ANALIZAR", x: 50, y: 74, color: "#8b5cf6" },
   { label: "OPTIMIZAR", x: 78, y: 74, color: "#f97316" },
-  { label: "DECIDIR", x: 50, y: 94, color: "#22c55e" },
+  { label: "SUGERIR", x: 50, y: 94, color: "#22c55e" },
 ];
 
 const connections: [number, number][] = [
@@ -118,7 +118,7 @@ export default function Ecosistema() {
                   <motion.circle
                     cx={node.x}
                     cy={node.y}
-                    r={node.main ? 3 : node.label === "DECIDIR" ? 2.5 : 2}
+                    r={node.main ? 3 : node.label === "SUGERIR" ? 2.5 : 2}
                     fill={node.color}
                     fillOpacity={0.2}
                     stroke={node.color}
@@ -129,7 +129,7 @@ export default function Ecosistema() {
                   />
                   <motion.text
                     x={node.x}
-                    y={node.y + (node.main ? 6 : node.label === "DECIDIR" ? 5.5 : 5)}
+                    y={node.y + (node.main ? 6 : node.label === "SUGERIR" ? 5.5 : 5)}
                     textAnchor="middle"
                     fill={node.color}
                     fontSize="3.5"
