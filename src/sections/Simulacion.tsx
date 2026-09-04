@@ -1,12 +1,21 @@
 "use client";
 
-import { useRef, useMemo, useEffect, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { motion, useInView } from "framer-motion";
+import { useRef, useMemo, useEffect, useState, useCallback } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import * as THREE from "three";
 import SectionReveal from "@/components/SectionReveal";
 
-// ─── Helper: Three.js Line ───────────────────────────────
+// ─── Types ────────────────────────────────────────────────
+interface SimState {
+  windSpeed: number;
+  windDir: number;
+  droneSpeed: number;
+  droneHeight: number;
+  isPlaying: boolean;
+}
+
+// ─── Three.js Line helper ─────────────────────────────────
 function ThreeLine({
   points,
   color,
@@ -18,14 +27,59 @@ function ThreeLine({
 }) {
   const geometry = useMemo(() => new THREE.BufferGeometry().setFromPoints(points), [points]);
   return (
-    <primitive object={new THREE.Line(geometry, new THREE.LineBasicMaterial({ color, transparent: true, opacity }))} />
+    <primitive
+      object={
+        new THREE.Line(
+          geometry,
+          new THREE.LineBasicMaterial({ color, transparent: true, opacity })
+        )
+      }
+    />
   );
 }
 
+// ─── Perlin-ish noise ────────────────────────────────────
+function noise3D(x: number, y: number, z: number): number {
+  const n = Math.sin(x * 12.9898 + y * 78.233 + z * 45.164) * 43758.5453;
+  return (n - Math.floor(n)) * 2 - 1;
+}
+
+// ─── Camera controller ───────────────────────────────────
+function CameraController({ isPlaying }: { isPlaying: boolean }) {
+  const { camera } = useThree();
+  const angleRef = useRef(0);
+  const radius = 9;
+  const target = useMemo(() => new THREE.Vector3(0, 1.5, 1), []);
+
+  useFrame(({ clock }) => {
+    if (!isPlaying) return;
+    const t = clock.getElapsedTime();
+    angleRef.current = t * 0.08;
+    const a = angleRef.current;
+    const targetPos = new THREE.Vector3(
+      Math.sin(a) * radius,
+      5 + Math.sin(t * 0.15) * 0.5,
+      Math.cos(a) * radius
+    );
+    camera.position.lerp(targetPos, 0.02);
+    camera.lookAt(target);
+  });
+
+  return null;
+}
+
 // ─── Drone realista ───────────────────────────────────────
-function DroneModel({ pathOffset }: { pathOffset: number }) {
+function DroneModel({
+  pathOffset,
+  height,
+}: {
+  pathOffset: number;
+  height: number;
+}) {
   const group = useRef<THREE.Group>(null);
   const rotors = useRef<THREE.Group>(null);
+  const ledLeft = useRef<THREE.PointLight>(null);
+  const ledRight = useRef<THREE.PointLight>(null);
 
   useFrame(({ clock }) => {
     if (!group.current) return;
@@ -34,11 +88,16 @@ function DroneModel({ pathOffset }: { pathOffset: number }) {
     const laneZ = -3 + lane * 2;
     const progress = (pathOffset * 4) % 1;
     const x = -4 + progress * 8;
-    group.current.position.set(x, 2.8 + Math.sin(t * 2) * 0.08, laneZ);
-    group.current.rotation.y = progress < 0.5 ? 0 : Math.PI;
-    if (rotors.current) {
-      rotors.current.rotation.y = t * 40;
-    }
+    const baseY = height + Math.sin(t * 2) * 0.06;
+    const tiltX = Math.sin(t * 1.7) * 0.02;
+    const tiltZ = Math.cos(t * 1.3) * 0.015;
+    group.current.position.set(x, baseY, laneZ);
+    group.current.rotation.set(tiltX, progress < 0.5 ? 0 : Math.PI, tiltZ);
+    if (rotors.current) rotors.current.rotation.y = t * 45;
+
+    // LED blink
+    if (ledLeft.current) ledLeft.current.intensity = 0.5 + Math.sin(t * 8) * 0.3;
+    if (ledRight.current) ledRight.current.intensity = 0.5 + Math.cos(t * 8) * 0.3;
   });
 
   const armPositions: [number, number, number][] = [
@@ -50,30 +109,89 @@ function DroneModel({ pathOffset }: { pathOffset: number }) {
 
   return (
     <group ref={group}>
-      <mesh position={[0, 0, 0]}>
+      {/* Cuerpo principal */}
+      <mesh position={[0, 0, 0]} castShadow>
         <boxGeometry args={[0.7, 0.12, 0.25]} />
-        <meshStandardMaterial color="#1a1a2e" metalness={0.7} roughness={0.3} />
+        <meshPhysicalMaterial
+          color="#1a1a2e"
+          metalness={0.85}
+          roughness={0.15}
+          clearcoat={0.4}
+          clearcoatRoughness={0.2}
+        />
       </mesh>
+      {/* Tapa */}
       <mesh position={[0, 0.08, 0]}>
         <boxGeometry args={[0.5, 0.04, 0.18]} />
-        <meshStandardMaterial color="#16213e" metalness={0.5} roughness={0.4} />
+        <meshPhysicalMaterial color="#16213e" metalness={0.7} roughness={0.2} clearcoat={0.3} />
       </mesh>
-      <mesh position={[0, 0.15, 0]}>
-        <cylinderGeometry args={[0.01, 0.01, 0.12, 8]} />
-        <meshStandardMaterial color="#444" />
+      {/* GPS module */}
+      <mesh position={[0, 0.11, 0]}>
+        <boxGeometry args={[0.12, 0.03, 0.08]} />
+        <meshStandardMaterial color="#333" metalness={0.5} />
       </mesh>
-      {armPositions.map((pos, i) => (
-        <group key={i}>
-          <mesh position={pos}>
-            <boxGeometry args={[0.04, 0.04, 0.55]} />
-            <meshStandardMaterial color="#1a1a2e" metalness={0.6} roughness={0.3} />
-          </mesh>
-          <mesh position={[pos[0], pos[1] - 0.02, pos[2] + (pos[2] > 0 ? 0.22 : -0.22)]}>
-            <cylinderGeometry args={[0.06, 0.04, 0.06, 12]} />
-            <meshStandardMaterial color="#2d2d44" metalness={0.8} roughness={0.2} />
-          </mesh>
-        </group>
-      ))}
+      {/* Antena */}
+      <mesh position={[0, 0.18, 0]}>
+        <cylinderGeometry args={[0.008, 0.008, 0.14, 6]} />
+        <meshStandardMaterial color="#666" metalness={0.7} />
+      </mesh>
+      <mesh position={[0, 0.26, 0]}>
+        <sphereGeometry args={[0.015, 8, 8]} />
+        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={2} />
+      </mesh>
+
+      {/* Brazos + cables */}
+      {armPositions.map((pos, i) => {
+        const motorPos: [number, number, number] = [
+          pos[0],
+          pos[1] - 0.02,
+          pos[2] + (pos[2] > 0 ? 0.22 : -0.22),
+        ];
+        return (
+          <group key={i}>
+            {/* Brazo */}
+            <mesh position={pos}>
+              <boxGeometry args={[0.04, 0.04, 0.55]} />
+              <meshPhysicalMaterial color="#1a1a2e" metalness={0.7} roughness={0.2} />
+            </mesh>
+            {/* Cable */}
+            <mesh
+              position={[
+                (pos[0] + motorPos[0]) / 2,
+                (pos[1] + motorPos[1]) / 2 - 0.04,
+                (pos[2] + motorPos[2]) / 2,
+              ]}
+              rotation={[0, 0, pos[0] > 0 ? -0.15 : 0.15]}
+            >
+              <cylinderGeometry args={[0.004, 0.004, 0.4, 6]} />
+              <meshStandardMaterial color="#444" />
+            </mesh>
+            {/* Pod de motor */}
+            <mesh position={motorPos} castShadow>
+              <cylinderGeometry args={[0.07, 0.05, 0.07, 12]} />
+              <meshPhysicalMaterial color="#2d2d44" metalness={0.85} roughness={0.1} />
+            </mesh>
+            {/* LED izquierdo/derecho */}
+            <pointLight
+              ref={i === 0 ? ledLeft : i === 1 ? ledRight : undefined}
+              position={[motorPos[0], motorPos[1] - 0.04, motorPos[2]]}
+              color={i < 2 ? "#ef4444" : "#22c55e"}
+              intensity={0.5}
+              distance={1.5}
+            />
+            <mesh position={[motorPos[0], motorPos[1] - 0.04, motorPos[2]]}>
+              <sphereGeometry args={[0.02, 8, 8]} />
+              <meshStandardMaterial
+                color={i < 2 ? "#ef4444" : "#22c55e"}
+                emissive={i < 2 ? "#ef4444" : "#22c55e"}
+                emissiveIntensity={1.5}
+              />
+            </mesh>
+          </group>
+        );
+      })}
+
+      {/* Rotores */}
       <group ref={rotors}>
         {armPositions.map((pos, i) => (
           <mesh
@@ -81,33 +199,54 @@ function DroneModel({ pathOffset }: { pathOffset: number }) {
             position={[pos[0], pos[1] + 0.02, pos[2] + (pos[2] > 0 ? 0.22 : -0.22)]}
             rotation={[Math.PI / 2, 0, 0]}
           >
-            <cylinderGeometry args={[0.2, 0.2, 0.005, 24]} />
-            <meshStandardMaterial color="#22c55e" transparent opacity={0.25} side={THREE.DoubleSide} />
+            <cylinderGeometry args={[0.22, 0.22, 0.004, 32]} />
+            <meshStandardMaterial
+              color="#22c55e"
+              transparent
+              opacity={0.2}
+              side={THREE.DoubleSide}
+            />
           </mesh>
         ))}
       </group>
+
+      {/* Patines */}
       {[-0.15, 0.15].map((z, i) => (
         <group key={i}>
           <mesh position={[-0.25, -0.2, z]}>
-            <cylinderGeometry args={[0.015, 0.015, 0.25, 8]} />
+            <cylinderGeometry args={[0.012, 0.012, 0.28, 8]} />
             <meshStandardMaterial color="#555" metalness={0.6} />
           </mesh>
           <mesh position={[0.25, -0.2, z]}>
-            <cylinderGeometry args={[0.015, 0.015, 0.25, 8]} />
+            <cylinderGeometry args={[0.012, 0.012, 0.28, 8]} />
             <meshStandardMaterial color="#555" metalness={0.6} />
           </mesh>
-          <mesh position={[0, -0.32, z]} rotation={[0, 0, Math.PI / 2]}>
-            <cylinderGeometry args={[0.01, 0.01, 0.5, 8]} />
+          <mesh position={[0, -0.34, z]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.008, 0.008, 0.52, 8]} />
             <meshStandardMaterial color="#444" metalness={0.5} />
           </mesh>
         </group>
       ))}
-      {[-0.12, 0.12].map((z, i) => (
-        <mesh key={i} position={[0, -0.15, z]}>
-          <coneGeometry args={[0.02, 0.06, 8]} />
-          <meshStandardMaterial color="#06b6d4" metalness={0.4} />
-        </mesh>
+
+      {/* Boquillas */}
+      {[-0.1, 0.1].map((z, i) => (
+        <group key={i}>
+          <mesh position={[0, -0.17, z]}>
+            <coneGeometry args={[0.02, 0.06, 8]} />
+            <meshStandardMaterial color="#06b6d4" metalness={0.5} />
+          </mesh>
+          {/* Luz del chorro */}
+          <pointLight
+            position={[0, -0.25, z]}
+            color="#22c55e"
+            intensity={0.2}
+            distance={1}
+          />
+        </group>
       ))}
+
+      {/* Luz orientación inferior */}
+      <pointLight position={[0, -0.4, 0]} color="#22c55e" intensity={0.3} distance={2} />
     </group>
   );
 }
@@ -116,8 +255,7 @@ function DroneModel({ pathOffset }: { pathOffset: number }) {
 function FlightPath({ pathOffset }: { pathOffset: number }) {
   const fullPath = useMemo(() => {
     const points: THREE.Vector3[] = [];
-    const lanes = 4;
-    for (let lane = 0; lane < lanes; lane++) {
+    for (let lane = 0; lane < 4; lane++) {
       const z = -3 + lane * 2;
       if (lane % 2 === 0) {
         points.push(new THREE.Vector3(-4, 2.8, z));
@@ -126,7 +264,7 @@ function FlightPath({ pathOffset }: { pathOffset: number }) {
         points.push(new THREE.Vector3(4, 2.8, z));
         points.push(new THREE.Vector3(-4, 2.8, z));
       }
-      if (lane < lanes - 1) {
+      if (lane < 3) {
         points.push(new THREE.Vector3(lane % 2 === 0 ? 4 : -4, 2.8, z + 2));
       }
     }
@@ -142,76 +280,123 @@ function FlightPath({ pathOffset }: { pathOffset: number }) {
 
   return (
     <group>
-      <ThreeLine points={fullPath} color="#1f3b33" opacity={0.3} />
-      {traveledPoints && <ThreeLine points={traveledPoints} color="#22c55e" opacity={0.7} />}
+      <ThreeLine points={fullPath} color="#1f3b33" opacity={0.25} />
+      {traveledPoints && <ThreeLine points={traveledPoints} color="#22c55e" opacity={0.6} />}
     </group>
   );
 }
 
 // ─── Spray particles ─────────────────────────────────────
-function SprayParticles({ pathOffset }: { pathOffset: number }) {
+function SprayParticles({
+  pathOffset,
+  windSpeed,
+  windDir,
+  height,
+}: {
+  pathOffset: number;
+  windSpeed: number;
+  windDir: number;
+  height: number;
+}) {
   const mesh = useRef<THREE.Points>(null);
-  const count = 120;
+  const count = 150;
 
-  const { positions, colors, velocities } = useMemo(() => {
+  const { positions, colors, velocities, sizes, lifetimes } = useMemo(() => {
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const velocities = new Float32Array(count * 3);
+    const sizes = new Float32Array(count);
+    const lifetimes = new Float32Array(count);
     for (let i = 0; i < count; i++) {
-      resetParticle(i, positions, velocities, colors, 0);
+      resetParticle(i, positions, velocities, colors, sizes, lifetimes, 0, height);
     }
-    return { positions, colors, velocities };
-  }, [count]);
+    return { positions, colors, velocities, sizes, lifetimes };
+  }, [count, height]);
 
   function resetParticle(
     i: number,
     pos: Float32Array,
     vel: Float32Array,
     col: Float32Array,
-    offset: number
+    sz: Float32Array,
+    life: Float32Array,
+    offset: number,
+    h: number
   ) {
     const lane = Math.floor(offset * 4);
     const laneZ = -3 + lane * 2;
     const progress = (offset * 4) % 1;
     const droneX = -4 + progress * 8;
-    const spread = (Math.random() - 0.5) * 0.6;
-    pos[i * 3] = droneX + spread * 0.3;
-    pos[i * 3 + 1] = 2.5 - Math.random() * 0.3;
+    const spread = (Math.random() - 0.5) * 0.5;
+
+    pos[i * 3] = droneX + (Math.random() - 0.5) * 0.15;
+    pos[i * 3 + 1] = h - 0.3 - Math.random() * 0.2;
     pos[i * 3 + 2] = laneZ + spread;
-    vel[i * 3] = (Math.random() - 0.5) * 0.002;
-    vel[i * 3 + 1] = -0.008 - Math.random() * 0.006;
-    vel[i * 3 + 2] = (Math.random() - 0.5) * 0.002;
-    col[i * 3] = 0.133;
-    col[i * 3 + 1] = 0.773;
-    col[i * 3 + 2] = 0.369;
+
+    vel[i * 3] = (Math.random() - 0.5) * 0.003;
+    vel[i * 3 + 1] = -0.006 - Math.random() * 0.008;
+    vel[i * 3 + 2] = (Math.random() - 0.5) * 0.003;
+
+    sz[i] = 0.03 + Math.random() * 0.04;
+    life[i] = 1.0;
+
+    col[i * 3] = 0.85;
+    col[i * 3 + 1] = 0.95;
+    col[i * 3 + 2] = 0.85;
   }
 
   useFrame(() => {
     if (!mesh.current) return;
     const pos = mesh.current.geometry.attributes.position;
     const col = mesh.current.geometry.attributes.color;
+    const sz = mesh.current.geometry.attributes.size;
     const posArr = pos.array as Float32Array;
     const colArr = col.array as Float32Array;
+    const szArr = sz.array as Float32Array;
+
+    const windAngle = (windDir * Math.PI) / 180;
+    const wx = Math.cos(windAngle) * windSpeed * 0.0003;
+    const wz = Math.sin(windAngle) * windSpeed * 0.0003;
+
     for (let i = 0; i < count; i++) {
       const idx = i * 3;
-      posArr[idx] += velocities[idx];
+      const t = Date.now() * 0.001;
+
+      // Turbulencia
+      const turbX = noise3D(posArr[idx] * 2, posArr[idx + 1] * 2, t) * 0.001;
+      const turbZ = noise3D(posArr[idx + 2] * 2, posArr[idx + 1] * 2, t + 100) * 0.001;
+
+      posArr[idx] += velocities[idx] + wx + turbX;
       posArr[idx + 1] += velocities[idx + 1];
-      posArr[idx + 2] += velocities[idx + 2];
-      velocities[idx] += 0.0001;
-      if (posArr[idx + 1] < -0.4) {
-        resetParticle(i, posArr, velocities, colArr, pathOffset);
+      posArr[idx + 2] += velocities[idx + 2] + wz + turbZ;
+
+      lifetimes[i] -= 0.004;
+      velocities[idx + 1] -= 0.00005; // gravedad extra
+
+      // Evaporación: gota se achica y transparente
+      const evap = Math.max(0, lifetimes[i]);
+      szArr[i] = (0.03 + Math.random() * 0.01) * evap;
+
+      if (posArr[idx + 1] < -0.4 || lifetimes[i] <= 0) {
+        resetParticle(i, posArr, velocities, colArr, szArr, lifetimes, pathOffset, height);
       }
-      const distFromDrone = Math.abs(posArr[idx + 1] - 2.8);
-      if (distFromDrone > 1.5) {
-        colArr[idx] = 0.937; colArr[idx + 1] = 0.267; colArr[idx + 2] = 0.267;
-      } else if (distFromDrone > 0.8) {
-        colArr[idx] = 0.937; colArr[idx + 1] = 0.698; colArr[idx + 2] = 0.031;
+
+      // Color por distancia
+      const distFromDrone = Math.abs(posArr[idx + 1] - height);
+      if (distFromDrone > 1.8 || lifetimes[i] < 0.3) {
+        // Deriva lejana: rojo
+        colArr[idx] = 0.9; colArr[idx + 1] = 0.2; colArr[idx + 2] = 0.2;
+      } else if (distFromDrone > 1.0) {
+        // Borde: amarillo
+        colArr[idx] = 0.95; colArr[idx + 1] = 0.85; colArr[idx + 2] = 0.1;
       } else {
-        colArr[idx] = 0.133; colArr[idx + 1] = 0.773; colArr[idx + 2] = 0.369;
+        // Chorro principal: verde claro/blanco
+        colArr[idx] = 0.85; colArr[idx + 1] = 0.95; colArr[idx + 2] = 0.85;
       }
     }
     pos.needsUpdate = true;
     col.needsUpdate = true;
+    sz.needsUpdate = true;
   });
 
   return (
@@ -219,23 +404,68 @@ function SprayParticles({ pathOffset }: { pathOffset: number }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} count={count} itemSize={3} />
         <bufferAttribute attach="attributes-color" args={[colors, 3]} count={count} itemSize={3} />
+        <bufferAttribute attach="attributes-size" args={[sizes, 1]} count={count} itemSize={1} />
       </bufferGeometry>
-      <pointsMaterial size={0.045} vertexColors transparent opacity={0.8} sizeAttenuation />
+      <pointsMaterial
+        size={0.05}
+        vertexColors
+        transparent
+        opacity={0.75}
+        sizeAttenuation
+        depthWrite={false}
+      />
     </points>
   );
 }
 
-// ─── Viento visual ───────────────────────────────────────
-function WindFlow() {
+// ─── Dust particles (polvo del drone) ────────────────────
+function DustParticles({ pathOffset, height }: { pathOffset: number; height: number }) {
+  const mesh = useRef<THREE.Points>(null);
+  const count = 40;
+
+  const positions = useMemo(() => {
+    const arr = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      arr[i * 3] = (Math.random() - 0.5) * 8;
+      arr[i * 3 + 1] = Math.random() * 0.3 - 0.45;
+      arr[i * 3 + 2] = (Math.random() - 0.5) * 8;
+    }
+    return arr;
+  }, [count]);
+
+  useFrame(({ clock }) => {
+    if (!mesh.current) return;
+    const t = clock.getElapsedTime();
+    const pos = mesh.current.geometry.attributes.position;
+    const arr = pos.array as Float32Array;
+    for (let i = 0; i < count; i++) {
+      arr[i * 3 + 1] += Math.sin(t * 0.5 + i) * 0.001;
+      arr[i * 3] += Math.cos(t * 0.3 + i * 0.5) * 0.0005;
+      if (arr[i * 3 + 1] > 0.5) arr[i * 3 + 1] = -0.45;
+    }
+    pos.needsUpdate = true;
+  });
+
+  return (
+    <points ref={mesh}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} count={count} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial size={0.02} color="#8b7355" transparent opacity={0.3} sizeAttenuation />
+    </points>
+  );
+}
+
+// ─── Wind flow lines ─────────────────────────────────────
+function WindFlow({ windSpeed, windDir }: { windSpeed: number; windDir: number }) {
   const group = useRef<THREE.Group>(null);
   const lines = useMemo(
     () =>
-      Array.from({ length: 10 }, () => ({
-        y: 0.5 + Math.random() * 2.5,
-        z: (Math.random() - 0.5) * 6,
-        speed: 0.03 + Math.random() * 0.02,
+      Array.from({ length: 12 }, () => ({
+        y: 0.3 + Math.random() * 3,
+        z: (Math.random() - 0.5) * 7,
         offset: Math.random() * 20,
-        length: 0.8 + Math.random() * 1.2,
+        length: 0.6 + Math.random() * 1.5,
       })),
     []
   );
@@ -243,11 +473,14 @@ function WindFlow() {
   useFrame(({ clock }) => {
     if (!group.current) return;
     const t = clock.getElapsedTime();
+    const windAngle = (windDir * Math.PI) / 180;
     group.current.children.forEach((child, i) => {
       const l = lines[i];
-      child.position.x = ((t * l.speed * 12 + l.offset) % 18) - 9;
+      const speed = windSpeed * 0.008;
+      child.position.x = ((t * Math.cos(windAngle) * speed * 12 + l.offset) % 18) - 9;
+      child.position.z = l.z + Math.sin(windAngle) * speed * t * 2;
       child.position.y = l.y;
-      child.position.z = l.z;
+      child.rotation.y = windAngle;
     });
   });
 
@@ -255,86 +488,129 @@ function WindFlow() {
     <group ref={group}>
       {lines.map((l, i) => (
         <mesh key={i}>
-          <boxGeometry args={[l.length, 0.003, 0.003]} />
-          <meshBasicMaterial color="#06b6d4" transparent opacity={0.2} />
+          <boxGeometry args={[l.length, 0.002, 0.002]} />
+          <meshBasicMaterial color="#06b6d4" transparent opacity={0.15 + windSpeed * 0.005} />
         </mesh>
       ))}
     </group>
   );
 }
 
-// ─── Campo con terreno y zonas ───────────────────────────
+// ─── Field terrain ───────────────────────────────────────
 function FieldTerrain() {
   const terrainGeo = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(10, 10, 40, 40);
+    const geo = new THREE.PlaneGeometry(12, 12, 50, 50);
     const pos = geo.attributes.position;
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);
       const y = pos.getY(i);
-      pos.setZ(i, Math.sin(x * 0.5) * 0.05 + Math.cos(y * 0.3) * 0.03);
+      pos.setZ(i, Math.sin(x * 0.4) * 0.04 + Math.cos(y * 0.3) * 0.03 + noise3D(x, y, 0) * 0.01);
     }
     geo.computeVertexNormals();
     return geo;
   }, []);
 
-  const gridLines = useMemo(() => {
+  // Surcos de cultivo
+  const furrows = useMemo(() => {
     const lines: THREE.Vector3[][] = [];
-    for (let i = -5; i <= 5; i++) {
-      lines.push([new THREE.Vector3(i, -0.48, -5), new THREE.Vector3(i, -0.48, 5)]);
-      lines.push([new THREE.Vector3(-5, -0.48, i), new THREE.Vector3(5, -0.48, i)]);
+    for (let i = -4; i <= 4; i += 0.5) {
+      lines.push([
+        new THREE.Vector3(-5, -0.47, i),
+        new THREE.Vector3(5, -0.47, i),
+      ]);
     }
     return lines;
   }, []);
 
   const lotBorder = useMemo(
     () => [
-      new THREE.Vector3(-4, -0.47, -3),
-      new THREE.Vector3(4, -0.47, -3),
-      new THREE.Vector3(4, -0.47, 5),
-      new THREE.Vector3(-4, -0.47, 5),
-      new THREE.Vector3(-4, -0.47, -3),
+      new THREE.Vector3(-4, -0.46, -3),
+      new THREE.Vector3(4, -0.46, -3),
+      new THREE.Vector3(4, -0.46, 5),
+      new THREE.Vector3(-4, -0.46, 5),
+      new THREE.Vector3(-4, -0.46, -3),
     ],
     []
   );
 
   const sensitiveBorder = useMemo(
     () => [
-      new THREE.Vector3(3.25, -0.45, 2.75),
-      new THREE.Vector3(5.75, -0.45, 2.75),
-      new THREE.Vector3(5.75, -0.45, 5.25),
-      new THREE.Vector3(3.25, -0.45, 5.25),
-      new THREE.Vector3(3.25, -0.45, 2.75),
+      new THREE.Vector3(3.25, -0.44, 2.75),
+      new THREE.Vector3(5.75, -0.44, 2.75),
+      new THREE.Vector3(5.75, -0.44, 5.25),
+      new THREE.Vector3(3.25, -0.44, 5.25),
+      new THREE.Vector3(3.25, -0.44, 2.75),
     ],
     []
   );
 
+  // Vegetación perimetral
+  const vegetation = useMemo(() => {
+    const items: { pos: [number, number, number]; scale: number }[] = [];
+    for (let i = 0; i < 30; i++) {
+      const edge = Math.floor(Math.random() * 4);
+      let x: number, z: number;
+      if (edge === 0) { x = -4.5 + Math.random() * 0.5; z = -3.5 + Math.random() * 9; }
+      else if (edge === 1) { x = 4 + Math.random() * 0.5; z = -3.5 + Math.random() * 9; }
+      else if (edge === 2) { x = -4.5 + Math.random() * 9; z = -3.5 + Math.random() * 0.5; }
+      else { x = -4.5 + Math.random() * 9; z = 4.5 + Math.random() * 0.5; }
+      items.push({ pos: [x, -0.35, z], scale: 0.08 + Math.random() * 0.12 });
+    }
+    return items;
+  }, []);
+
   return (
     <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]} geometry={terrainGeo}>
-        <meshStandardMaterial color="#0f1a15" metalness={0.1} roughness={0.9} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]} geometry={terrainGeo} receiveShadow>
+        <meshStandardMaterial color="#0d1510" metalness={0.05} roughness={0.95} />
       </mesh>
-      {gridLines.map((pts, i) => (
-        <ThreeLine key={i} points={pts} color="#1a3029" opacity={0.35} />
+
+      {/* Surcos */}
+      {furrows.map((pts, i) => (
+        <ThreeLine key={`f${i}`} points={pts} color="#152218" opacity={0.3} />
       ))}
+
+      {/* Borde lote */}
       <ThreeLine points={lotBorder} color="#22c55e" opacity={0.5} />
-      <mesh position={[4.5, -0.46, 4]} rotation={[-Math.PI / 2, 0, 0]}>
+
+      {/* Zona sensible */}
+      <mesh position={[4.5, -0.45, 4]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[2.5, 2.5]} />
-        <meshBasicMaterial color="#ef4444" transparent opacity={0.12} />
+        <meshBasicMaterial color="#ef4444" transparent opacity={0.1} />
       </mesh>
-      <ThreeLine points={sensitiveBorder} color="#ef4444" opacity={0.4} />
-      <mesh position={[0, -0.47, 1]} rotation={[-Math.PI / 2, 0, 0]}>
+      <ThreeLine points={sensitiveBorder} color="#ef4444" opacity={0.35} />
+      {/* Warning stripes */}
+      {[3.5, 4, 4.5, 5, 5.5].map((x, i) => (
+        <ThreeLine
+          key={`w${i}`}
+          points={[new THREE.Vector3(x, -0.43, 2.8), new THREE.Vector3(x, -0.43, 5.2)]}
+          color="#ef4444"
+          opacity={0.15}
+        />
+      ))}
+
+      {/* Zona objetivo */}
+      <mesh position={[0, -0.46, 1]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[8, 8]} />
-        <meshBasicMaterial color="#22c55e" transparent opacity={0.06} />
+        <meshBasicMaterial color="#22c55e" transparent opacity={0.04} />
       </mesh>
+
+      {/* Vegetación */}
+      {vegetation.map((v, i) => (
+        <mesh key={i} position={v.pos}>
+          <coneGeometry args={[v.scale * 0.3, v.scale, 6]} />
+          <meshStandardMaterial color="#1a4025" roughness={0.9} />
+        </mesh>
+      ))}
     </group>
   );
 }
 
-// ─── Depósito en suelo ───────────────────────────────────
+// ─── Ground deposition ───────────────────────────────────
 function GroundDeposition({ pathOffset }: { pathOffset: number }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const texture = useMemo(() => {
-    const size = 128;
+    const size = 200;
     const canvas = document.createElement("canvas");
     canvas.width = size;
     canvas.height = size;
@@ -350,10 +626,12 @@ function GroundDeposition({ pathOffset }: { pathOffset: number }) {
     const { ctx, tex, size } = texture;
     const lane = Math.floor(pathOffset * 4);
     const progress = (pathOffset * 4) % 1;
-    const x = progress * size;
-    const z = ((lane + 0.5) / 4) * size;
-    const gradient = ctx.createRadialGradient(x, z, 0, x, z, 12);
-    gradient.addColorStop(0, "rgba(34,197,94,0.15)");
+    // Mapear coordenadas 3D a canvas
+    const x = ((progress * 8 - 4 + 5) / 10) * size;
+    const z = ((-3 + lane * 2 + 3 + 5) / 10) * size;
+    const gradient = ctx.createRadialGradient(x, z, 0, x, z, 18);
+    gradient.addColorStop(0, "rgba(34,197,94,0.12)");
+    gradient.addColorStop(0.5, "rgba(34,197,94,0.06)");
     gradient.addColorStop(1, "rgba(34,197,94,0)");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, size, size);
@@ -364,22 +642,109 @@ function GroundDeposition({ pathOffset }: { pathOffset: number }) {
   }, [pathOffset, texture]);
 
   return (
-    <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.46, 1]}>
+    <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.45, 1]}>
       <planeGeometry args={[8, 8]} />
-      <meshBasicMaterial map={texture.tex} transparent opacity={0.6} />
+      <meshBasicMaterial map={texture.tex} transparent opacity={0.5} depthWrite={false} />
     </mesh>
   );
 }
 
 // ─── HUD overlay ─────────────────────────────────────────
-function SceneHUD({ pathOffset }: { pathOffset: number }) {
+function SceneHUD({
+  pathOffset,
+  windSpeed,
+  windDir,
+  droneSpeed,
+}: {
+  pathOffset: number;
+  windSpeed: number;
+  windDir: number;
+  droneSpeed: number;
+}) {
   const lane = Math.floor(pathOffset * 4) + 1;
   const progress = Math.round((pathOffset % 0.25) * 400);
+  const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+  const dirLabel = dirs[Math.round(windDir / 45) % 8];
+
   return (
-    <div className="absolute top-4 left-4 right-4 flex justify-between text-[10px] font-mono text-foreground/40 pointer-events-none">
+    <div className="absolute top-3 left-3 right-3 flex justify-between text-[9px] font-mono text-foreground/40 pointer-events-none">
       <span>PASADA {lane}/4</span>
-      <span>PROGRESO {progress}%</span>
-      <span>VIENTO 12 km/h NE</span>
+      <span>{progress}%</span>
+      <span>VIENTO {windSpeed} km/h {dirLabel}</span>
+      <span>{droneSpeed} m/s</span>
+    </div>
+  );
+}
+
+// ─── Controls panel ──────────────────────────────────────
+function Controls({
+  state,
+  onChange,
+}: {
+  state: SimState;
+  onChange: (s: Partial<SimState>) => void;
+}) {
+  return (
+    <div className="absolute bottom-12 left-3 right-3 hidden md:flex gap-3 pointer-events-auto">
+      <div className="flex-1 bg-precisur-dark-900/80 backdrop-blur-sm rounded-md p-2.5 border border-precisur-dark-600/30">
+        <label className="text-[9px] font-mono text-foreground/40 block mb-1">
+          VIENTO {state.windSpeed} km/h
+        </label>
+        <input
+          type="range"
+          min={0}
+          max={30}
+          value={state.windSpeed}
+          onChange={(e) => onChange({ windSpeed: Number(e.target.value) })}
+          className="w-full h-1 accent-precisur-cyan"
+        />
+      </div>
+      <div className="flex-1 bg-precisur-dark-900/80 backdrop-blur-sm rounded-md p-2.5 border border-precisur-dark-600/30">
+        <label className="text-[9px] font-mono text-foreground/40 block mb-1">
+          DIRECCION {state.windDir}°
+        </label>
+        <input
+          type="range"
+          min={0}
+          max={360}
+          value={state.windDir}
+          onChange={(e) => onChange({ windDir: Number(e.target.value) })}
+          className="w-full h-1 accent-precisur-cyan"
+        />
+      </div>
+      <div className="flex-1 bg-precisur-dark-900/80 backdrop-blur-sm rounded-md p-2.5 border border-precisur-dark-600/30">
+        <label className="text-[9px] font-mono text-foreground/40 block mb-1">
+          ALTURA {state.droneHeight.toFixed(1)}m
+        </label>
+        <input
+          type="range"
+          min={2}
+          max={5}
+          step={0.1}
+          value={state.droneHeight}
+          onChange={(e) => onChange({ droneHeight: Number(e.target.value) })}
+          className="w-full h-1 accent-precisur-green"
+        />
+      </div>
+      <div className="flex-1 bg-precisur-dark-900/80 backdrop-blur-sm rounded-md p-2.5 border border-precisur-dark-600/30">
+        <label className="text-[9px] font-mono text-foreground/40 block mb-1">
+          VELOCIDAD {state.droneSpeed} m/s
+        </label>
+        <input
+          type="range"
+          min={1}
+          max={8}
+          value={state.droneSpeed}
+          onChange={(e) => onChange({ droneSpeed: Number(e.target.value) })}
+          className="w-full h-1 accent-precisur-green"
+        />
+      </div>
+      <button
+        onClick={() => onChange({ isPlaying: !state.isPlaying })}
+        className="px-3 bg-precisur-green/20 hover:bg-precisur-green/30 text-precisur-green text-[10px] font-mono rounded-md border border-precisur-green/30 transition-colors"
+      >
+        {state.isPlaying ? "PAUSA" : "PLAY"}
+      </button>
     </div>
   );
 }
@@ -389,17 +754,29 @@ export default function Simulacion() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [pathOffset, setPathOffset] = useState(0);
+  const [state, setState] = useState<SimState>({
+    windSpeed: 12,
+    windDir: 45,
+    droneSpeed: 4,
+    droneHeight: 2.8,
+    isPlaying: true,
+  });
+
+  const handleChange = useCallback((partial: Partial<SimState>) => {
+    setState((prev) => ({ ...prev, ...partial }));
+  }, []);
 
   useEffect(() => {
-    if (!isInView) return;
+    if (!isInView || !state.isPlaying) return;
     let raf: number;
+    const speed = state.droneSpeed * 0.0002;
     const animate = () => {
-      setPathOffset((prev) => (prev + 0.0008) % 1);
+      setPathOffset((prev) => (prev + speed) % 1);
       raf = requestAnimationFrame(animate);
     };
     raf = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(raf);
-  }, [isInView]);
+  }, [isInView, state.isPlaying, state.droneSpeed]);
 
   return (
     <section
@@ -426,12 +803,15 @@ export default function Simulacion() {
 
             <div className="space-y-3">
               {[
-                "Lote con geometria y elevacion real",
-                "Drone con trayectoria de barrido",
-                "Chorro de aspersion con deriva",
-                "Viento con vectores de flujo",
+                "Drone con LEDs, cables y movimiento realista",
+                "Chorro de aspersion con gotas variables",
+                "Turbulencia y evaporacion de gotas",
+                "Viento configurable con vectores de flujo",
+                "Surcos de cultivo y vegetacion perimetral",
                 "Mapa de deposicion en tiempo real",
-                "Zonas sensibles y objetivo identificadas",
+                "Zonas sensibles con patrón de advertencia",
+                "Controles interactivos (viento, altura, velocidad)",
+                "Camara orbital cinematografica",
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-precisur-green" />
@@ -452,26 +832,40 @@ export default function Simulacion() {
                 shadows
               >
                 <color attach="background" args={["#0a0f0d"]} />
-                <fog attach="fog" args={["#0a0f0d", 12, 22]} />
-                <ambientLight intensity={0.25} />
+                <fog attach="fog" args={["#0a0f0d", 14, 24]} />
+                <ambientLight intensity={0.2} />
                 <directionalLight
-                  position={[5, 8, 3]}
-                  intensity={0.7}
+                  position={[5, 10, 3]}
+                  intensity={0.8}
                   castShadow
                   shadow-mapSize={[1024, 1024]}
                 />
-                <pointLight position={[0, 4, 0]} intensity={0.3} color="#22c55e" />
+                <pointLight position={[0, 5, 0]} intensity={0.15} color="#22c55e" />
+
+                <CameraController isPlaying={state.isPlaying} />
                 <FieldTerrain />
                 <GroundDeposition pathOffset={pathOffset} />
                 <FlightPath pathOffset={pathOffset} />
-                <DroneModel pathOffset={pathOffset} />
-                <SprayParticles pathOffset={pathOffset} />
-                <WindFlow />
+                <DroneModel pathOffset={pathOffset} height={state.droneHeight} />
+                <SprayParticles
+                  pathOffset={pathOffset}
+                  windSpeed={state.windSpeed}
+                  windDir={state.windDir}
+                  height={state.droneHeight}
+                />
+                <DustParticles pathOffset={pathOffset} height={state.droneHeight} />
+                <WindFlow windSpeed={state.windSpeed} windDir={state.windDir} />
               </Canvas>
             )}
 
-            <SceneHUD pathOffset={pathOffset} />
-            <div className="absolute bottom-4 left-4 right-4 flex justify-between text-[10px] font-mono text-foreground/30 pointer-events-none">
+            <SceneHUD
+              pathOffset={pathOffset}
+              windSpeed={state.windSpeed}
+              windDir={state.windDir}
+              droneSpeed={state.droneSpeed}
+            />
+            <Controls state={state} onChange={handleChange} />
+            <div className="absolute bottom-2 left-3 right-3 flex justify-between text-[8px] font-mono text-foreground/25 pointer-events-none md:bottom-14">
               <span>Verde: en lote</span>
               <span>Amarillo: borde</span>
               <span>Rojo: fuera</span>
