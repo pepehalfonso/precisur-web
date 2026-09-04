@@ -33,7 +33,7 @@ export default function LlamadoColaboracion() {
               Llamado a Colaboración
             </span>
 
-            <h2 className="font-heading text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-8">
+            <h2 className="font-heading text-2xl sm:text-3xl md:text-5xl lg:text-7xl font-bold leading-tight mb-8">
               <span className="text-foreground">
                 LA TECNOLOGÍA AGRÍCOLA
               </span>
@@ -75,7 +75,7 @@ export default function LlamadoColaboracion() {
             >
               <a
                 href="mailto:info@precisur.uy"
-                className="px-10 py-5 bg-precisur-green text-precisur-dark-900 font-heading font-bold text-lg rounded hover:bg-precisur-green-dark transition-colors duration-300"
+                className="px-6 py-4 md:px-10 md:py-5 bg-precisur-green text-precisur-dark-900 font-heading font-bold text-base md:text-lg rounded hover:bg-precisur-green-dark transition-colors duration-300"
               >
                 EXPLORAR UNA POSIBLE COLABORACIÓN
               </a>

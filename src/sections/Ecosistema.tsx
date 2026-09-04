@@ -99,7 +99,7 @@ export default function Ecosistema() {
                     y={node.y + (node.main ? 6 : 5)}
                     textAnchor="middle"
                     fill={node.color}
-                    fontSize="2.2"
+                    fontSize="3.5"
                     fontFamily="monospace"
                     opacity={0.8}
                     initial={{ opacity: 0 }}
