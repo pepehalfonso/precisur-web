@@ -16,16 +16,6 @@ interface SimState {
   cameraPreset: "orbital" | "topdown" | "side" | "follow";
 }
 
-interface CoverageStats {
-  totalPct: number;
-  optimalPct: number;
-  heavyPct: number;
-  driftPct: number;
-  missedPct: number;
-  efficiency: number;
-  productUsed: number;
-}
-
 // ─── Helpers ──────────────────────────────────────────────
 function ThreeLine({
   points,
@@ -52,241 +42,6 @@ function ThreeLine({
 function noise3D(x: number, y: number, z: number): number {
   const n = Math.sin(x * 12.9898 + y * 78.233 + z * 45.164) * 43758.5453;
   return (n - Math.floor(n)) * 2 - 1;
-}
-
-// ─── Coverage heatmap hook (optimized) ────────────────────
-function useCoverageHeatmap() {
-  const ref = useRef<{
-    canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; tex: THREE.CanvasTexture;
-    dataCanvas: HTMLCanvasElement; dataCtx: CanvasRenderingContext2D; size: number;
-  } | null>(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    if (ref.current || typeof document === "undefined") return;
-    const size = 256;
-    const canvas = document.createElement("canvas");
-    canvas.width = size; canvas.height = size;
-    const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = "#0a0f0d"; ctx.fillRect(0, 0, size, size);
-    const tex = new THREE.CanvasTexture(canvas); tex.needsUpdate = true;
-    const dataCanvas = document.createElement("canvas");
-    dataCanvas.width = size; dataCanvas.height = size;
-    const dataCtx = dataCanvas.getContext("2d")!;
-    dataCtx.fillStyle = "#000"; dataCtx.fillRect(0, 0, size, size);
-    ref.current = { canvas, ctx, tex, dataCanvas, dataCtx, size };
-    setReady(true);
-  }, []);
-
-  const update = useCallback((droneX: number, droneZ: number, windAngle: number, windSpeed: number) => {
-    if (!ref.current) return;
-    const { ctx, tex, size } = ref.current;
-    const px = ((droneX + 5) / 10) * size;
-    const py = ((droneZ + 4) / 9) * size;
-
-    // Paint spray footprint directly as green circle on display canvas
-    const grad = ctx.createRadialGradient(px, py, 0, px, py, 18);
-    grad.addColorStop(0, "rgba(34,197,94,0.12)");
-    grad.addColorStop(0.5, "rgba(34,197,94,0.05)");
-    grad.addColorStop(1, "rgba(34,197,94,0)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, size, size);
-
-    // Drift marker
-    if (windSpeed > 2) {
-      const driftPx = px + Math.cos(windAngle) * windSpeed * 0.5;
-      const driftPy = py + Math.sin(windAngle) * windSpeed * 0.5;
-      const driftGrad = ctx.createRadialGradient(driftPx, driftPy, 0, driftPx, driftPy, 8);
-      driftGrad.addColorStop(0, "rgba(239,68,68,0.08)");
-      driftGrad.addColorStop(1, "rgba(239,68,68,0)");
-      ctx.fillStyle = driftGrad;
-      ctx.fillRect(0, 0, size, size);
-    }
-
-    tex.needsUpdate = true;
-  }, []);
-
-  const getStats = useCallback((): CoverageStats => {
-    if (!ref.current) return { totalPct: 0, optimalPct: 0, heavyPct: 0, driftPct: 0, missedPct: 100, efficiency: 0, productUsed: 0 };
-    const { ctx, size } = ref.current;
-    const data = ctx.getImageData(0, 0, size, size);
-    let covered = 0, drifted = 0, total = 0;
-    for (let i = 0; i < data.data.length; i += 4) {
-      const r = data.data[i], g = data.data[i + 1];
-      if (g > 30 && g > r) covered++;
-      else if (r > 40 && r > g) drifted++;
-    }
-    const lotPixels = size * size * 0.64;
-    const totalPct = Math.min(100, Math.round((covered / lotPixels) * 100));
-    const driftPct = Math.round((drifted / lotPixels) * 30);
-    const missedPct = Math.max(0, 100 - totalPct - driftPct);
-    const optimalPct = Math.round(totalPct * 0.7);
-    const heavyPct = Math.round(totalPct * 0.3);
-    const efficiency = Math.max(0, Math.min(100, Math.round(optimalPct / Math.max(1, totalPct) * 100)));
-    return { totalPct, optimalPct, heavyPct, driftPct, missedPct, efficiency, productUsed: Math.round(totalPct * 0.12 * 10) / 10 };
-  }, []);
-
-  return { ref, update, getStats };
-}
-
-// ─── Ground heatmap mesh ──────────────────────────────────
-function GroundHeatmap({ heatmapRef, pathOffset }: { heatmapRef: React.MutableRefObject<{ tex: THREE.CanvasTexture } | null>; pathOffset: number }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  useFrame(() => {
-    if (meshRef.current && heatmapRef.current) {
-      (meshRef.current.material as THREE.MeshBasicMaterial).map = heatmapRef.current.tex;
-    }
-  });
-  return (
-    <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.443, 1]}>
-      <planeGeometry args={[8, 8]} />
-      <meshBasicMaterial transparent opacity={0.6} depthWrite={false} />
-    </mesh>
-  );
-}
-
-// ─── Spray reach rings ────────────────────────────────────
-function SprayReachRings({ pathOffset, height }: { pathOffset: number; height: number }) {
-  const group = useRef<THREE.Group>(null);
-  useFrame(() => {
-    if (!group.current) return;
-    const lane = Math.floor(pathOffset * 4);
-    const laneZ = -3 + lane * 2;
-    const progress = (pathOffset * 4) % 1;
-    group.current.position.set(-4 + progress * 8, height - 0.3, laneZ);
-  });
-  return (
-    <group ref={group} rotation={[-Math.PI / 2, 0, 0]}>
-      {[0.4, 0.8, 1.2].map((r, i) => (
-        <mesh key={i}>
-          <ringGeometry args={[r - 0.01, r + 0.01, 48]} />
-          <meshBasicMaterial color="#22c55e" transparent opacity={0.15 - i * 0.04} side={THREE.DoubleSide} depthWrite={false} />
-        </mesh>
-      ))}
-      {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((a, i) => (
-        <group key={i} rotation={[0, 0, a]}>
-          <mesh position={[0.8, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-            <boxGeometry args={[0.005, 0.005, 1.6]} />
-            <meshBasicMaterial color="#22c55e" transparent opacity={0.06} />
-          </mesh>
-        </group>
-      ))}
-    </group>
-  );
-}
-
-// ─── Drift tracers ────────────────────────────────────────
-function DriftTracers({ pathOffset, windSpeed, windDir, height }: {
-  pathOffset: number; windSpeed: number; windDir: number; height: number;
-}) {
-  const mesh = useRef<THREE.Points>(null);
-  const count = 25;
-  const data = useMemo(() => {
-    const pos = new Float32Array(count * 3);
-    const vel = new Float32Array(count * 3);
-    const life = new Float32Array(count);
-    for (let i = 0; i < count; i++) resetTracer(i, pos, vel, life);
-    return { pos, vel, life };
-  }, [count]);
-
-  function resetTracer(i: number, pos: Float32Array, vel: Float32Array, life: Float32Array) {
-    const lane = Math.floor(Math.random() * 4);
-    pos[i * 3] = (Math.random() - 0.5) * 8;
-    pos[i * 3 + 1] = height - 0.5 + Math.random() * 1.5;
-    pos[i * 3 + 2] = -3 + lane * 2 + (Math.random() - 0.5) * 2;
-    vel[i * 3] = 0; vel[i * 3 + 1] = 0.001; vel[i * 3 + 2] = 0;
-    life[i] = 1;
-  }
-
-  useFrame(() => {
-    if (!mesh.current) return;
-    const p = mesh.current.geometry.attributes.position;
-    const arr = p.array as Float32Array;
-    const windAngle = (windDir * Math.PI) / 180;
-    const wx = Math.cos(windAngle) * windSpeed * 0.001;
-    const wz = Math.sin(windAngle) * windSpeed * 0.001;
-    for (let i = 0; i < count; i++) {
-      const idx = i * 3;
-      arr[idx] += wx + data.vel[idx]; arr[idx + 1] += data.vel[idx + 1]; arr[idx + 2] += wz + data.vel[idx + 2];
-      data.life[i] -= 0.005;
-      if (data.life[i] <= 0) resetTracer(i, arr, data.vel, data.life);
-    }
-    p.needsUpdate = true;
-  });
-
-  return (
-    <points ref={mesh}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[data.pos, 3]} />
-      </bufferGeometry>
-      <pointsMaterial size={0.05} color="#ef4444" transparent opacity={0.5} sizeAttenuation depthWrite={false} blending={THREE.AdditiveBlending} />
-    </points>
-  );
-}
-
-// ─── Analytics overlay ────────────────────────────────────
-function AnalyticsOverlay({ stats, pathOffset }: { stats: CoverageStats; pathOffset: number }) {
-  const lane = Math.floor(pathOffset * 4) + 1;
-  return (
-    <div className="absolute top-8 left-2 w-36 md:w-40 pointer-events-none">
-      <div className="bg-precisur-dark-900/85 backdrop-blur-sm rounded border border-precisur-dark-600/30 p-2 space-y-1.5">
-        <div className="text-[8px] font-mono text-precisur-cyan uppercase tracking-wider border-b border-precisur-dark-600/30 pb-1">
-          ANALISIS DE COBERTURA
-        </div>
-        <div className="relative h-1.5 bg-precisur-dark-700 rounded-full overflow-hidden">
-          <div className="absolute inset-y-0 left-0 bg-precisur-green rounded-full transition-all duration-300"
-            style={{ width: `${stats.totalPct}%` }} />
-        </div>
-        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[7px] font-mono">
-          <span className="text-foreground/30">Cobertura</span>
-          <span className="text-precisur-green text-right">{stats.totalPct}%</span>
-          <span className="text-foreground/30">Optima</span>
-          <span className="text-precisur-green text-right">{stats.optimalPct}%</span>
-          <span className="text-foreground/30">Exceso</span>
-          <span className="text-precisur-yellow text-right">{stats.heavyPct}%</span>
-          <span className="text-foreground/30">Deriva</span>
-          <span className="text-red-400 text-right">{stats.driftPct}%</span>
-          <span className="text-foreground/30">Sin cubrir</span>
-          <span className="text-foreground/40 text-right">{stats.missedPct}%</span>
-        </div>
-        <div className="border-t border-precisur-dark-600/30 pt-1 grid grid-cols-2 gap-x-2 text-[7px] font-mono">
-          <span className="text-foreground/30">Eficiencia</span>
-          <span className={`text-right ${stats.efficiency > 70 ? "text-precisur-green" : stats.efficiency > 40 ? "text-precisur-yellow" : "text-red-400"}`}>
-            {stats.efficiency}%
-          </span>
-          <span className="text-foreground/30">Producto</span>
-          <span className="text-foreground/40 text-right">{stats.productUsed}L</span>
-        </div>
-        <div className="text-[7px] font-mono text-foreground/20 pt-0.5">PASADA {lane}/4</div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Wind rose ────────────────────────────────────────────
-function WindRose({ windSpeed, windDir }: { windSpeed: number; windDir: number }) {
-  const a = (windDir * Math.PI) / 180;
-  const len = Math.min(18, 6 + windSpeed * 0.4);
-  return (
-    <div className="absolute top-8 right-2 w-14 h-14 md:w-16 md:h-16 pointer-events-none">
-      <div className="bg-precisur-dark-900/85 backdrop-blur-sm rounded border border-precisur-dark-600/30 p-1">
-        <svg viewBox="0 0 60 60" className="w-full h-full">
-          <circle cx="30" cy="30" r="26" fill="none" stroke="#1a3029" strokeWidth="0.5" />
-          <circle cx="30" cy="30" r="18" fill="none" stroke="#1a3029" strokeWidth="0.3" />
-          <circle cx="30" cy="30" r="10" fill="none" stroke="#1a3029" strokeWidth="0.3" />
-          <text x="30" y="8" textAnchor="middle" fill="#22c55e" fontSize="5" fontFamily="monospace" opacity="0.6">N</text>
-          <text x="56" y="32" textAnchor="middle" fill="#555" fontSize="4" fontFamily="monospace" opacity="0.4">E</text>
-          <text x="30" y="57" textAnchor="middle" fill="#555" fontSize="4" fontFamily="monospace" opacity="0.4">S</text>
-          <text x="5" y="32" textAnchor="middle" fill="#555" fontSize="4" fontFamily="monospace" opacity="0.4">O</text>
-          <line x1={30 - Math.cos(a) * len * 0.4} y1={30 - Math.sin(a) * len * 0.4}
-            x2={30 + Math.cos(a) * len} y2={30 + Math.sin(a) * len}
-            stroke="#06b6d4" strokeWidth="1.5" strokeLinecap="round" opacity="0.7" />
-          <circle cx={30 + Math.cos(a) * len} cy={30 + Math.sin(a) * len} r="2" fill="#06b6d4" opacity="0.8" />
-          <text x="30" y="34" textAnchor="middle" fill="#06b6d4" fontSize="5" fontFamily="monospace" opacity="0.5">{windSpeed}</text>
-        </svg>
-      </div>
-    </div>
-  );
 }
 
 // ─── Camera controller ───────────────────────────────────
@@ -1092,29 +847,10 @@ export default function Simulacion() {
   });
 
   const coverage = Math.min(100, Math.round(pathOffset * 100));
-  const heatmap = useCoverageHeatmap();
-  const [stats, setStats] = useState<CoverageStats>({ totalPct: 0, optimalPct: 0, heavyPct: 0, driftPct: 0, missedPct: 100, efficiency: 0, productUsed: 0 });
 
   const handleChange = useCallback((partial: Partial<SimState>) => {
     setState((prev) => ({ ...prev, ...partial }));
   }, []);
-
-  useEffect(() => {
-    if (!isInView || !state.isPlaying) return;
-    const lane = Math.floor(pathOffset * 4);
-    const laneZ = -3 + lane * 2;
-    const progress = (pathOffset * 4) % 1;
-    const droneX = -4 + progress * 8;
-    const windAngle = (state.windDir * Math.PI) / 180;
-    heatmap.update(droneX, laneZ, windAngle, state.windSpeed);
-  }, [pathOffset, state.windDir, state.windSpeed, isInView, state.isPlaying, heatmap]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStats(heatmap.getStats());
-    }, 500);
-    return () => clearInterval(interval);
-  }, [heatmap]);
 
   useEffect(() => {
     if (!isInView || !state.isPlaying) return;
@@ -1150,11 +886,6 @@ export default function Simulacion() {
                 "Drone con propeller blur, payload camara, LEDs, brazos taperados",
                 "3 boquillas con angulo variable y abanico de spray",
                 "Gotas con distribucion de tamano y evaporacion",
-                "Heatmap de cobertura en tiempo real (verde=optima, amarillo=exceso, rojo=deriva)",
-                "Anillo de alcance del spray (3 franjas de cobertura)",
-                "Tracers de deriva (partículas rojas fuera del lote)",
-                "Panel de analytics: cobertura, eficiencia, producto, pasada",
-                "Rosa de viento con direccion y velocidad",
                 "Cultivos 3D en filas y camino de tierra",
                 "Camara orbital con drag, zoom y presets",
                 "Presets de escenario (calmo, moderado, fuerte, extremo)",
@@ -1181,27 +912,19 @@ export default function Simulacion() {
 
                 <CameraController isPlaying={state.isPlaying} preset={state.cameraPreset} dronePos={dronePosRef.current} />
                 <FieldTerrain />
-                <GroundHeatmap heatmapRef={heatmap.ref} pathOffset={pathOffset} />
                 <FlightPath pathOffset={pathOffset} />
                 <DroneModel pathOffset={pathOffset} height={state.droneHeight} dronePosRef={dronePosRef} />
-                <SprayReachRings pathOffset={pathOffset} height={state.droneHeight} />
                 <SprayCloud pathOffset={pathOffset} height={state.droneHeight} />
                 <SprayParticles pathOffset={pathOffset} windSpeed={state.windSpeed} windDir={state.windDir} height={state.droneHeight} />
-                <DriftTracers pathOffset={pathOffset} windSpeed={state.windSpeed} windDir={state.windDir} height={state.droneHeight} />
                 <GroundSplash pathOffset={pathOffset} height={state.droneHeight} />
                 <DustParticles pathOffset={pathOffset} />
                 <WindFlow windSpeed={state.windSpeed} windDir={state.windDir} />
               </Canvas>
             )}
 
-            <AnalyticsOverlay stats={stats} pathOffset={pathOffset} />
-            <WindRose windSpeed={state.windSpeed} windDir={state.windDir} />
+            <SceneHUD pathOffset={pathOffset} windSpeed={state.windSpeed} windDir={state.windDir} droneSpeed={state.droneSpeed} coverage={coverage} />
+            <Minimap pathOffset={pathOffset} coverage={coverage} />
             <Controls state={state} onChange={handleChange} />
-            <div className="absolute bottom-1.5 left-2 right-2 flex justify-between text-[7px] font-mono text-foreground/20 pointer-events-none md:bottom-28">
-              <span>Verde: optima</span>
-              <span>Amarillo: exceso</span>
-              <span>Rojo: deriva</span>
-            </div>
           </div>
         </SectionReveal>
       </div>
