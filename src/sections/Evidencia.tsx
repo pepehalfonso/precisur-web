@@ -36,7 +36,7 @@ const timeline = [
 
 const counters = [
   { end: 934, label: "Pruebas Automatizadas", desc: "Convergencia, invariantes, causalidad y estrés" },
-  { end: 0, label: "Errores de Análisis", desc: "Zero regressions en el motor físico" },
+  { end: 0, label: "Errores de Análisis", desc: "Cero regresiones en el motor físico" },
   { end: 1, label: "Motor Físico Canónico", desc: "Una única fuente activa de simulación", duration: 1 },
   { end: 8, label: "Correcciones Críticas", desc: "Bugs detectados y corregidos en auditoría", duration: 1.5 },
 ];
@@ -92,7 +92,31 @@ export default function Evidencia() {
             <h3 className="font-heading text-xl font-semibold text-foreground/70 mb-6 text-center uppercase tracking-wider">
               Proceso de Ingeniería
             </h3>
-            <div className="flex flex-wrap justify-center items-center gap-2 md:gap-3">
+            {/* Mobile: vertical staircase */}
+            <div className="md:hidden flex flex-col items-start ml-4">
+              {timeline.map((item, i) => (
+                <div key={i} className="flex items-center">
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={`px-4 py-2 rounded border border-current/20 bg-current/5 ${item.color}`}
+                    >
+                      <span className="text-xs font-mono font-semibold">
+                        {item.step}
+                      </span>
+                    </div>
+                    {i < timeline.length - 1 && (
+                      <div className="flex flex-col items-center py-1">
+                        <div className="w-px h-3 bg-foreground/10" />
+                        <span className="text-foreground/20 text-xs">↓</span>
+                        <div className="w-px h-3 bg-foreground/10" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Desktop: horizontal row */}
+            <div className="hidden md:flex flex-wrap justify-center items-center gap-3">
               {timeline.map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div

@@ -82,7 +82,7 @@ export default function LaPregunta() {
                       className="flex items-center gap-1 text-foreground/20 mx-2"
                     >
                       <div className="w-8 h-px bg-gradient-to-r from-precisur-dark-600 to-foreground/20" />
-                      <span className="text-[10px] font-mono whitespace-nowrap">brecha</span>
+                      <span className="text-xs font-mono whitespace-nowrap">brecha</span>
                       <div className="w-8 h-px bg-gradient-to-r from-foreground/20 to-precisur-dark-600" />
                     </motion.div>
                   )}
@@ -111,7 +111,7 @@ export default function LaPregunta() {
                       className="flex flex-col items-center text-foreground/20 py-1"
                     >
                       <div className="w-px h-3 bg-gradient-to-b from-precisur-dark-600 to-foreground/20" />
-                      <span className="text-[10px] font-mono my-0.5">brecha</span>
+                      <span className="text-xs font-mono my-0.5">brecha</span>
                       <div className="w-px h-3 bg-gradient-to-b from-foreground/20 to-precisur-dark-600" />
                     </motion.div>
                   )}

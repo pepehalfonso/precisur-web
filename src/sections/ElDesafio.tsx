@@ -88,7 +88,7 @@ export default function ElDesafio() {
                   <div className="text-xs font-mono text-foreground/60 font-semibold">
                     {force.name}
                   </div>
-                  <div className="text-[10px] text-foreground/40">
+                  <div className="text-xs text-foreground/40">
                     {force.desc}
                   </div>
                 </motion.div>

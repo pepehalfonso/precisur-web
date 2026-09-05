@@ -31,7 +31,7 @@ export default function OportunidadParaUruguay() {
               ¿QUÉ OCURRIRÍA SI ESTAS
               <br />
               <span className="text-precisur-green">
-                CAPACIDADES COMENZARAN
+                CAPACIDADES COMENZARÍAN
               </span>
               <br />
               <span className="text-precisur-green">A TRABAJAR JUNTAS?</span>

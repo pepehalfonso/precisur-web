@@ -76,7 +76,7 @@ export default function SmartSpray() {
               <SectionReveal key={step.num} delay={i * 0.1}>
                 <motion.div
                   whileHover={{ x: 8 }}
-                  className="flex items-start gap-6 md:gap-8"
+                  className="flex items-start gap-8 md:gap-10"
                 >
                   <div className="relative z-10 flex-shrink-0">
                     <div
@@ -87,11 +87,11 @@ export default function SmartSpray() {
                       </span>
                     </div>
                   </div>
-                  <div className="pt-2">
+                  <div className="pt-2 min-w-0">
                     <h3 className={`font-heading text-xl font-bold mb-2 ${step.color}`}>
                       {step.title}
                     </h3>
-                    <p className="text-foreground/60 leading-relaxed max-w-lg">
+                    <p className="text-foreground/60 leading-relaxed max-w-md">
                       {step.desc}
                     </p>
                   </div>

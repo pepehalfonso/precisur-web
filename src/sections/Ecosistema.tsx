@@ -95,7 +95,7 @@ export default function Ecosistema() {
         </SectionReveal>
 
         <SectionReveal delay={0.2}>
-          <div className="relative max-w-3xl mx-auto aspect-[4/3]">
+          <div className="relative max-w-3xl mx-auto aspect-square md:aspect-[4/3]">
             <svg
               viewBox="0 0 100 100"
               className="w-full h-full"
@@ -133,7 +133,7 @@ export default function Ecosistema() {
                     textAnchor="middle"
                     fill={node.color}
                     fontSize="3.5"
-                    fontFamily="monospace"
+                    style={{ fontFamily: "var(--font-mono)" }}
                     opacity={0.8}
                     initial={{ opacity: 0 }}
                     animate={isInView ? { opacity: 0.8 } : { opacity: 0 }}

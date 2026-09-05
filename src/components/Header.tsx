@@ -131,7 +131,7 @@ export default function Header() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMenuOpen(false)}
-                  className={`transition-colors ${
+                  className={`text-sm transition-colors ${
                     activeSection === item.id
                       ? "text-precisur-green"
                       : "text-foreground/70 hover:text-precisur-green"
