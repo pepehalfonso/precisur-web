@@ -54,7 +54,7 @@ function noise3D(x: number, y: number, z: number): number {
   return (n - Math.floor(n)) * 2 - 1;
 }
 
-// ─── Coverage heatmap hook ────────────────────────────────
+// ─── Coverage heatmap hook (optimized) ────────────────────
 function useCoverageHeatmap() {
   const ref = useRef<{
     canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; tex: THREE.CanvasTexture;
@@ -80,66 +80,50 @@ function useCoverageHeatmap() {
 
   const update = useCallback((droneX: number, droneZ: number, windAngle: number, windSpeed: number) => {
     if (!ref.current) return;
-    const { ctx, dataCtx, tex, size } = ref.current;
+    const { ctx, tex, size } = ref.current;
     const px = ((droneX + 5) / 10) * size;
     const py = ((droneZ + 4) / 9) * size;
-    const radius = 16;
-    const grad = dataCtx.createRadialGradient(px, py, 0, px, py, radius);
-    grad.addColorStop(0, "rgba(255,255,255,0.08)");
-    grad.addColorStop(0.6, "rgba(255,255,255,0.03)");
-    grad.addColorStop(1, "rgba(255,255,255,0)");
-    dataCtx.fillStyle = grad; dataCtx.fillRect(0, 0, size, size);
-    const driftPx = px + Math.cos(windAngle) * windSpeed * 0.4;
-    const driftPy = py + Math.sin(windAngle) * windSpeed * 0.4;
-    const driftGrad = dataCtx.createRadialGradient(driftPx, driftPy, 0, driftPx, driftPy, 10);
-    driftGrad.addColorStop(0, "rgba(255,100,100,0.04)");
-    driftGrad.addColorStop(1, "rgba(255,100,100,0)");
-    dataCtx.fillStyle = driftGrad; dataCtx.fillRect(0, 0, size, size);
-    const data = dataCtx.getImageData(0, 0, size, size);
-    const img = ctx.createImageData(size, size);
-    for (let i = 0; i < data.data.length; i += 4) {
-      const val = data.data[i];
-      const nx = ((i / 4) % size) / size;
-      const ny = Math.floor(i / 4 / size) / size;
-      const inSensitive = nx >= 0.82 && ny >= 0.72;
-      if (val < 10) { img.data[i] = 10; img.data[i + 1] = 15; img.data[i + 2] = 13; }
-      else if (inSensitive) { const t = Math.min(1, val / 180); img.data[i] = 30 + t * 80 | 0; img.data[i + 1] = 15 - t * 10 | 0; img.data[i + 2] = 15 - t * 10 | 0; }
-      else if (val < 60) { const t = val / 60; img.data[i] = 10 + t * 20 | 0; img.data[i + 1] = 20 + t * 60 | 0; img.data[i + 2] = 10 + t * 20 | 0; }
-      else if (val < 140) { const t = (val - 60) / 80; img.data[i] = 20 + t * 30 | 0; img.data[i + 1] = 80 + t * 117 | 0; img.data[i + 2] = 20; }
-      else if (val < 200) { const t = (val - 140) / 60; img.data[i] = 50 + t * 180 | 0; img.data[i + 1] = 197 - t * 20 | 0; img.data[i + 2] = 20; }
-      else { const t = Math.min(1, (val - 200) / 55); img.data[i] = 230 + t * 25 | 0; img.data[i + 1] = 177 - t * 130 | 0; img.data[i + 2] = 20; }
-      img.data[i + 3] = 255;
+
+    // Paint spray footprint directly as green circle on display canvas
+    const grad = ctx.createRadialGradient(px, py, 0, px, py, 18);
+    grad.addColorStop(0, "rgba(34,197,94,0.12)");
+    grad.addColorStop(0.5, "rgba(34,197,94,0.05)");
+    grad.addColorStop(1, "rgba(34,197,94,0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+
+    // Drift marker
+    if (windSpeed > 2) {
+      const driftPx = px + Math.cos(windAngle) * windSpeed * 0.5;
+      const driftPy = py + Math.sin(windAngle) * windSpeed * 0.5;
+      const driftGrad = ctx.createRadialGradient(driftPx, driftPy, 0, driftPx, driftPy, 8);
+      driftGrad.addColorStop(0, "rgba(239,68,68,0.08)");
+      driftGrad.addColorStop(1, "rgba(239,68,68,0)");
+      ctx.fillStyle = driftGrad;
+      ctx.fillRect(0, 0, size, size);
     }
-    ctx.putImageData(img, 0, 0); tex.needsUpdate = true;
+
+    tex.needsUpdate = true;
   }, []);
 
   const getStats = useCallback((): CoverageStats => {
     if (!ref.current) return { totalPct: 0, optimalPct: 0, heavyPct: 0, driftPct: 0, missedPct: 100, efficiency: 0, productUsed: 0 };
-    const { dataCtx, size } = ref.current;
-    const data = dataCtx.getImageData(0, 0, size, size);
-    let total = 0, optimal = 0, heavy = 0, drift = 0, missed = 0;
-    const lotPixels = size * size * 0.64;
+    const { ctx, size } = ref.current;
+    const data = ctx.getImageData(0, 0, size, size);
+    let covered = 0, drifted = 0, total = 0;
     for (let i = 0; i < data.data.length; i += 4) {
-      const val = data.data[i];
-      const nx = ((i / 4) % size) / size;
-      const ny = Math.floor(i / 4 / size) / size;
-      const inLot = nx >= 0.1 && nx <= 0.9 && ny >= 0.1 && ny <= 0.9;
-      const inSensitive = nx >= 0.82 && ny >= 0.72;
-      if (!inLot) { if (val > 20) drift++; continue; }
-      if (inSensitive) continue;
-      if (val < 10) missed++;
-      else if (val < 60) total += 0.3;
-      else if (val < 140) { total++; optimal++; }
-      else if (val < 200) { total++; heavy++; }
-      else { total++; heavy += 2; }
+      const r = data.data[i], g = data.data[i + 1];
+      if (g > 30 && g > r) covered++;
+      else if (r > 40 && r > g) drifted++;
     }
-    const totalPct = Math.min(100, Math.round((total / lotPixels) * 100));
-    const optimalPct = Math.round((optimal / lotPixels) * 100);
-    const heavyPct = Math.round((heavy / lotPixels) * 100);
-    const driftPct = Math.round((drift / lotPixels) * 30);
+    const lotPixels = size * size * 0.64;
+    const totalPct = Math.min(100, Math.round((covered / lotPixels) * 100));
+    const driftPct = Math.round((drifted / lotPixels) * 30);
     const missedPct = Math.max(0, 100 - totalPct - driftPct);
-    const efficiency = Math.max(0, Math.min(100, Math.round(optimalPct / Math.max(1, totalPct + heavyPct) * 100)));
-    return { totalPct, optimalPct, heavyPct, driftPct, missedPct, efficiency, productUsed: Math.round(total * 0.012 * 10) / 10 };
+    const optimalPct = Math.round(totalPct * 0.7);
+    const heavyPct = Math.round(totalPct * 0.3);
+    const efficiency = Math.max(0, Math.min(100, Math.round(optimalPct / Math.max(1, totalPct) * 100)));
+    return { totalPct, optimalPct, heavyPct, driftPct, missedPct, efficiency, productUsed: Math.round(totalPct * 0.12 * 10) / 10 };
   }, []);
 
   return { ref, update, getStats };
@@ -233,9 +217,9 @@ function DriftTracers({ pathOffset, windSpeed, windDir, height }: {
   return (
     <points ref={mesh}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[data.pos, 3]} count={count} itemSize={3} />
+        <bufferAttribute attach="attributes-position" args={[data.pos, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.03} color="#ef4444" transparent opacity={0.4} sizeAttenuation depthWrite={false} />
+      <pointsMaterial size={0.05} color="#ef4444" transparent opacity={0.5} sizeAttenuation depthWrite={false} blending={THREE.AdditiveBlending} />
     </points>
   );
 }
@@ -674,11 +658,11 @@ function SprayParticles({
   return (
     <points ref={mesh}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[data.positions, 3]} count={count} itemSize={3} />
-        <bufferAttribute attach="attributes-color" args={[data.colors, 3]} count={count} itemSize={3} />
-        <bufferAttribute attach="attributes-size" args={[data.sizes, 1]} count={count} itemSize={1} />
+        <bufferAttribute attach="attributes-position" args={[data.positions, 3]} />
+        <bufferAttribute attach="attributes-color" args={[data.colors, 3]} />
+        <bufferAttribute attach="attributes-size" args={[data.sizes, 1]} />
       </bufferGeometry>
-      <pointsMaterial size={0.05} vertexColors transparent opacity={0.7} sizeAttenuation depthWrite={false} />
+      <pointsMaterial size={0.12} vertexColors transparent opacity={0.8} sizeAttenuation depthWrite={false} blending={THREE.AdditiveBlending} />
     </points>
   );
 }
@@ -730,9 +714,9 @@ function GroundSplash({ pathOffset, height }: { pathOffset: number; height: numb
   return (
     <points ref={mesh}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[data.pos, 3]} count={count} itemSize={3} />
+        <bufferAttribute attach="attributes-position" args={[data.pos, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.025} color="#6b8f71" transparent opacity={0.4} sizeAttenuation depthWrite={false} />
+      <pointsMaterial size={0.04} color="#6b8f71" transparent opacity={0.5} sizeAttenuation depthWrite={false} />
     </points>
   );
 }
@@ -767,9 +751,9 @@ function DustParticles({ pathOffset }: { pathOffset: number }) {
   return (
     <points ref={mesh}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} count={count} itemSize={3} />
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.018} color="#7a6b52" transparent opacity={0.25} sizeAttenuation />
+      <pointsMaterial size={0.03} color="#7a6b52" transparent opacity={0.3} sizeAttenuation />
     </points>
   );
 }
