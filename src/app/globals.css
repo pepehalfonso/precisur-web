@@ -81,3 +81,31 @@ body {
   0% { transform: translateY(-100%); }
   100% { transform: translateY(100%); }
 }
+
+/* ─── Staircase (Proceso de Ingeniería mobile) ────────── */
+@media (max-width: 768px) {
+  .stair-step {
+    margin-left: calc(var(--i) * clamp(16px, 5vw, 28px));
+  }
+
+  .stair-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 12px;
+    height: 24px;
+    justify-content: center;
+  }
+
+  .stair-connector-v {
+    width: 1px;
+    height: 12px;
+    background: rgba(232, 237, 233, 0.08);
+  }
+
+  .stair-connector-h {
+    width: clamp(16px, 5vw, 28px);
+    height: 1px;
+    background: rgba(232, 237, 233, 0.08);
+  }
+}

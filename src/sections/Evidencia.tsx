@@ -92,30 +92,7 @@ export default function Evidencia() {
             <h3 className="font-heading text-xl font-semibold text-foreground/70 mb-6 text-center uppercase tracking-wider">
               Proceso de Ingeniería
             </h3>
-            {/* Mobile: staircase */}
-            <div className="md:hidden flex flex-col">
-              {timeline.map((item, i) => (
-                <div key={i}>
-                  {/* Step box */}
-                  <div style={{ marginLeft: `${i * 28}px` }}>
-                    <div
-                      className={`inline-block px-4 py-2 rounded border border-current/20 bg-current/5 ${item.color}`}
-                    >
-                      <span className="text-xs font-mono font-semibold">
-                        {item.step}
-                      </span>
-                    </div>
-                  </div>
-                  {/* Connector: vertical line + horizontal line to next step */}
-                  {i < timeline.length - 1 && (
-                    <div style={{ marginLeft: `${i * 28 + 16}px` }} className="flex flex-col items-start">
-                      <div className="w-px h-4 bg-foreground/10" />
-                      <div className="w-5 h-px bg-foreground/10" />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+
             {/* Desktop: horizontal row */}
             <div className="hidden md:flex flex-wrap justify-center items-center gap-3">
               {timeline.map((item, i) => (
@@ -129,6 +106,34 @@ export default function Evidencia() {
                   </div>
                   {i < timeline.length - 1 && (
                     <span className="text-foreground/20">→</span>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Mobile: staircase */}
+            <div className="md:hidden">
+              {timeline.map((item, i) => (
+                <div
+                  key={i}
+                  className="stair-step"
+                  style={{ "--i": i } as React.CSSProperties}
+                >
+                  {/* Step box */}
+                  <div
+                    className={`inline-block px-4 py-2 rounded border border-current/20 bg-current/5 ${item.color}`}
+                  >
+                    <span className="text-xs font-mono font-semibold">
+                      {item.step}
+                    </span>
+                  </div>
+
+                  {/* Connector: vertical + horizontal */}
+                  {i < timeline.length - 1 && (
+                    <div className="stair-connector">
+                      <div className="stair-connector-v" />
+                      <div className="stair-connector-h" />
+                    </div>
                   )}
                 </div>
               ))}
