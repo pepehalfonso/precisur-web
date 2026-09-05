@@ -93,10 +93,10 @@ export default function Evidencia() {
               Proceso de Ingeniería
             </h3>
             {/* Mobile: vertical staircase */}
-            <div className="md:hidden flex flex-col items-start ml-4">
+            <div className="md:hidden flex flex-col">
               {timeline.map((item, i) => (
-                <div key={i} className="flex items-center">
-                  <div className="flex flex-col items-center">
+                <div key={i}>
+                  <div className="flex items-center" style={{ marginLeft: `${i * 24}px` }}>
                     <div
                       className={`px-4 py-2 rounded border border-current/20 bg-current/5 ${item.color}`}
                     >
@@ -104,14 +104,16 @@ export default function Evidencia() {
                         {item.step}
                       </span>
                     </div>
-                    {i < timeline.length - 1 && (
-                      <div className="flex flex-col items-center py-1">
-                        <div className="w-px h-3 bg-foreground/10" />
-                        <span className="text-foreground/20 text-xs">↓</span>
-                        <div className="w-px h-3 bg-foreground/10" />
-                      </div>
-                    )}
                   </div>
+                  {i < timeline.length - 1 && (
+                    <div style={{ marginLeft: `${i * 24 + 16}px` }} className="flex flex-col items-start py-1">
+                      <div className="w-px h-2 bg-foreground/10" />
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-px bg-foreground/10" />
+                        <span className="text-foreground/20 text-[10px]">↓</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
