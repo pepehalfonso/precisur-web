@@ -1,170 +1,396 @@
 "use client";
 
-import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import SectionReveal from "@/components/SectionReveal";
-import Counter from "@/components/Counter";
 
-const bugs = [
+// ─── Data ─────────────────────────────────────────────────
+const maturityLevels = [
   {
-    title: "Gravedad invertida",
-    desc: "Las partículas subían en lugar de caer.",
-    fix: "Corrección del signo en la aceleración gravitacional.",
-    color: "text-precisur-red",
+    num: "01",
+    title: "IMPLEMENTADO",
+    symbol: "●",
+    colorClass: "text-precisur-green",
+    borderColor: "border-precisur-green/30",
+    bgColor: "bg-precisur-green/5",
+    dotColor: "bg-precisur-green",
+    description: "Componentes funcionales integrados dentro de la arquitectura actual del sistema.",
+    meaning: "Existe código funcional dentro del sistema.",
+    guarantees: "Disponibilidad funcional dentro de la arquitectura.",
+    doesNotGuarantee: "Correspondencia experimental automática con el fenómeno real.",
+    examples: [
+      "Motor de simulación de partículas",
+      "Integración de fuerzas (viento, gravedad, evaporación)",
+      "Sistema de escenarios configurables",
+      "Representación espacial de lotes",
+      "Arquitectura modular del software",
+    ],
   },
   {
-    title: "Partículas fuera del mapa",
-    desc: "Error de coordenadas geográficas enviaba datos al exterior del grid.",
-    fix: "Conversión corregida entre coordenadas absolutas y relativas.",
-    color: "text-precisur-orange",
+    num: "02",
+    title: "VERIFICADO COMPUTACIONALMENTE",
+    symbol: "◈",
+    colorClass: "text-precisur-cyan",
+    borderColor: "border-precisur-cyan/30",
+    bgColor: "bg-precisur-cyan/5",
+    dotColor: "bg-precisur-cyan",
+    description: "Comportamientos evaluados mediante pruebas, invariantes, análisis de regresión o validaciones internas del software.",
+    meaning: "El comportamiento computacional fue sometido a mecanismos de verificación.",
+    guarantees: "Consistencia interna, reproducibilidad computacional y estabilidad del modelo.",
+    doesNotGuarantee: "Correspondencia con mediciones experimentales del mundo real.",
+    examples: [
+      "Pruebas de regresión automatizadas",
+      "Verificación de causalidad física",
+      "Invariantes de conservación",
+      "Análisis de estabilidad numérica",
+      "Consistencia entre módulos",
+    ],
   },
   {
-    title: "Condición de carrera",
-    desc: "El optimizador y el motor principal accedían al mismo estado simultáneamente.",
-    fix: "Aislamiento de estado y sincronización explícita.",
-    color: "text-precisur-yellow",
+    num: "03",
+    title: "EN INVESTIGACIÓN",
+    symbol: "◌",
+    colorClass: "text-precisur-orange",
+    borderColor: "border-precisur-orange/30",
+    bgColor: "bg-precisur-orange/5",
+    dotColor: "bg-precisur-orange",
+    description: "Modelos, hipótesis o mecanismos que continúan siendo desarrollados, analizados o refinados.",
+    meaning: "Existe investigación activa y el comportamiento todavía puede evolucionar.",
+    guarantees: "Exploración activa de alternativas y mejora continua del modelo.",
+    doesNotGuarantee: "Estabilidad ni validez del modelo resultante.",
+    examples: [
+      "Modelos avanzados de turbulencia",
+      "Interacciones ambientales complejas",
+      "Calibración de parámetros del modelo",
+      "Optimización de configuraciones de escenario",
+      "Nuevos modelos físicos en desarrollo",
+    ],
+  },
+  {
+    num: "04",
+    title: "REQUIERE VALIDACIÓN EXPERIMENTAL",
+    symbol: "△",
+    colorClass: "text-precisur-red",
+    borderColor: "border-precisur-red/30",
+    bgColor: "bg-precisur-red/5",
+    dotColor: "bg-precisur-red",
+    description: "Comportamientos que necesitan comparación con mediciones reales para determinar su correspondencia con el fenómeno físico.",
+    meaning: "El software puede estar implementado y verificado, pero todavía requiere evidencia experimental.",
+    guarantees: "Transparencia sobre el estado real del desarrollo.",
+    doesNotGuarantee: "Que los resultados del modelo coincidan con observaciones de campo.",
+    examples: [
+      "Ensayos de campo con instrumentación",
+      "Mediciones de deriva en condiciones reales",
+      "Comparación con deposición efectiva",
+      "Calibración experimental con datos instrumentales",
+      "Repetibilidad bajo condiciones ambientales variables",
+    ],
   },
 ];
 
-const timeline = [
-  { step: "BUG DETECTADO", color: "text-precisur-red" },
-  { step: "CAUSA ENCONTRADA", color: "text-precisur-orange" },
-  { step: "CORRECCIÓN", color: "text-precisur-yellow" },
-  { step: "PRUEBA DE REGRESIÓN", color: "text-precisur-cyan" },
-  { step: "VALIDACIÓN", color: "text-precisur-green" },
-];
+// ─── Maturity Level Component ─────────────────────────────
+function MaturityLevel({
+  level,
+  index,
+  isActive,
+  onToggle,
+  isDimmed,
+}: {
+  level: (typeof maturityLevels)[number];
+  index: number;
+  isActive: boolean;
+  onToggle: () => void;
+  isDimmed: boolean;
+}) {
+  return (
+    <motion.div
+      layout
+      className="relative"
+      animate={{ opacity: isDimmed ? 0.35 : 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* Desktop layout */}
+      <div className="hidden md:grid grid-cols-[60px_1fr] gap-4 items-start">
+        {/* Left: number + line */}
+        <div className="flex flex-col items-center">
+          <div
+            className={`w-10 h-10 rounded border ${level.borderColor} ${level.bgColor} flex items-center justify-center ${level.colorClass}`}
+          >
+            <span className="font-mono text-sm font-bold">{level.num}</span>
+          </div>
+          {index < maturityLevels.length - 1 && (
+            <div className="w-px h-full min-h-[40px] bg-foreground/8" />
+          )}
+        </div>
 
-const counters = [
-  { end: 934, label: "Pruebas Automatizadas", desc: "Convergencia, invariantes, causalidad y estrés" },
-  { end: 0, label: "Errores de Análisis", desc: "Cero regresiones en el motor físico" },
-  { end: 1, label: "Motor Físico Canónico", desc: "Una única fuente activa de simulación", duration: 1 },
-  { end: 8, label: "Correcciones Críticas", desc: "Bugs detectados y corregidos en auditoría", duration: 1.5 },
-];
+        {/* Right: content */}
+        <div className="pb-8">
+          <button
+            onClick={onToggle}
+            className="text-left w-full group"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`text-sm ${level.colorClass}`}>{level.symbol}</span>
+              <span className={`font-mono text-xs font-semibold tracking-wider ${level.colorClass}`}>
+                {level.title}
+              </span>
+            </div>
+            <p className="text-sm text-foreground/50 leading-relaxed max-w-xl">
+              {level.description}
+            </p>
+          </button>
 
+          <AnimatePresence>
+            {isActive && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.35, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="mt-4 p-4 rounded border border-precisur-dark-600/30 bg-precisur-dark-800/40">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono">
+                    <div>
+                      <div className="text-foreground/30 uppercase tracking-wider mb-1">Significado</div>
+                      <div className="text-foreground/60 leading-relaxed">{level.meaning}</div>
+                    </div>
+                    <div>
+                      <div className="text-foreground/30 uppercase tracking-wider mb-1">Garantiza</div>
+                      <div className="text-precisur-green/70 leading-relaxed">{level.guarantees}</div>
+                    </div>
+                    <div>
+                      <div className="text-foreground/30 uppercase tracking-wider mb-1">No garantiza</div>
+                      <div className="text-precisur-red/60 leading-relaxed">{level.doesNotGuarantee}</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-precisur-dark-600/20">
+                    <div className="text-foreground/30 uppercase tracking-wider mb-2 text-[10px]">Ejemplos</div>
+                    <div className="flex flex-wrap gap-2">
+                      {level.examples.map((ex, j) => (
+                        <span
+                          key={j}
+                          className={`px-2 py-1 rounded border ${level.borderColor} ${level.bgColor} ${level.colorClass} text-[10px]`}
+                        >
+                          {ex}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Mobile layout */}
+      <div className="md:hidden">
+        <button
+          onClick={onToggle}
+          className="text-left w-full"
+        >
+          <div className="flex items-center gap-3 mb-1">
+            <div
+              className={`w-9 h-9 rounded border ${level.borderColor} ${level.bgColor} flex items-center justify-center flex-shrink-0 ${level.colorClass}`}
+            >
+              <span className="font-mono text-xs font-bold">{level.num}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`text-sm ${level.colorClass}`}>{level.symbol}</span>
+              <span className={`font-mono text-[11px] font-semibold tracking-wider ${level.colorClass}`}>
+                {level.title}
+              </span>
+            </div>
+          </div>
+          <p className="text-xs text-foreground/50 leading-relaxed ml-12">
+            {level.description}
+          </p>
+        </button>
+
+        <AnimatePresence>
+          {isActive && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.35, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="mt-3 ml-12 p-3 rounded border border-precisur-dark-600/30 bg-precisur-dark-800/40 text-xs font-mono space-y-2">
+                <div>
+                  <span className="text-foreground/30 uppercase tracking-wider">Significado: </span>
+                  <span className="text-foreground/60">{level.meaning}</span>
+                </div>
+                <div>
+                  <span className="text-foreground/30 uppercase tracking-wider">Garantiza: </span>
+                  <span className="text-precisur-green/70">{level.guarantees}</span>
+                </div>
+                <div>
+                  <span className="text-foreground/30 uppercase tracking-wider">No garantiza: </span>
+                  <span className="text-precisur-red/60">{level.doesNotGuarantee}</span>
+                </div>
+                <div className="pt-2 border-t border-precisur-dark-600/20">
+                  <div className="text-foreground/30 uppercase tracking-wider mb-1 text-[10px]">Ejemplos</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {level.examples.map((ex, j) => (
+                      <span
+                        key={j}
+                        className={`px-1.5 py-0.5 rounded border ${level.borderColor} ${level.bgColor} ${level.colorClass} text-[9px]`}
+                      >
+                        {ex}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Verification vs Validation Callout ────────────────────
+function VerificationCallout() {
+  return (
+    <SectionReveal delay={0.15}>
+      <div className="my-10 md:my-14 mx-auto max-w-2xl">
+        <div className="relative p-5 md:p-6 rounded border border-precisur-cyan/20 bg-precisur-cyan/[0.03]">
+          {/* Corner accents */}
+          <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-precisur-cyan/40" />
+          <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-precisur-cyan/40" />
+          <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-precisur-cyan/40" />
+          <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-precisur-cyan/40" />
+
+          <div className="text-center">
+            <div className="text-[10px] font-mono text-precisur-cyan/50 uppercase tracking-[0.2em] mb-3">
+              Diferencia Fundamental
+            </div>
+            <div className="font-mono text-lg md:text-xl font-bold text-foreground/80 mb-4">
+              VERIFICAR <span className="text-precisur-cyan">≠</span> VALIDAR
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+              <div className="text-left p-3 rounded bg-precisur-dark-800/50 border border-precisur-dark-600/20">
+                <div className="text-precisur-cyan/70 uppercase tracking-wider mb-1">Verificación</div>
+                <div className="text-foreground/50 leading-relaxed">
+                  ¿El sistema computacional se comporta de acuerdo con sus especificaciones y reglas internas?
+                </div>
+              </div>
+              <div className="text-left p-3 rounded bg-precisur-dark-800/50 border border-precisur-dark-600/20">
+                <div className="text-precisur-green/70 uppercase tracking-wider mb-1">Validación</div>
+                <div className="text-foreground/50 leading-relaxed">
+                  ¿El modelo representa adecuadamente el fenómeno físico observado en el mundo real?
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 text-[10px] font-mono text-foreground/25 uppercase tracking-wider">
+              Software correcto <span className="text-precisur-cyan/40">≠</span> Modelo confirmado
+            </div>
+          </div>
+        </div>
+      </div>
+    </SectionReveal>
+  );
+}
+
+// ─── Final Reflection ─────────────────────────────────────
+function FinalReflection() {
+  const flowSteps = ["IMPLEMENTAR", "VERIFICAR", "INVESTIGAR", "MEDIR", "VALIDAR"];
+
+  return (
+    <SectionReveal delay={0.1}>
+      <div className="mt-16 md:mt-20">
+        <div className="text-center mb-8">
+          <h3 className="font-heading text-xl font-semibold text-foreground/70 uppercase tracking-wider">
+            La Frontera Actual
+          </h3>
+        </div>
+        <div className="max-w-2xl mx-auto text-center mb-10">
+          <p className="text-foreground/50 text-sm leading-relaxed mb-4">
+            Precisur no considera la simulación como una sustitución automática de la experimentación.
+            El objetivo es construir modelos computacionales útiles, verificar rigurosamente su comportamiento
+            y avanzar progresivamente hacia su comparación con fenómenos medidos en condiciones reales.
+          </p>
+          <p className="text-foreground/50 text-sm leading-relaxed">
+            La validación experimental no es un detalle pendiente.
+            Es una parte fundamental del proceso de ingeniería.
+          </p>
+        </div>
+
+        {/* Flow diagram */}
+        <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-0">
+          {flowSteps.map((step, i) => (
+            <div key={step} className="flex items-center gap-2">
+              <div className="px-4 py-2 rounded border border-precisur-dark-600/30 bg-precisur-dark-800/50">
+                <span className="font-mono text-xs text-foreground/50">{step}</span>
+              </div>
+              {i < flowSteps.length - 1 && (
+                <span className="text-foreground/15 text-xs md:rotate-0 rotate-90">↓</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </SectionReveal>
+  );
+}
+
+// ─── Main ─────────────────────────────────────────────────
 export default function Evidencia() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const [activeLevel, setActiveLevel] = useState<number | null>(null);
+
+  const handleToggle = (index: number) => {
+    setActiveLevel((prev) => (prev === index ? null : index));
+  };
 
   return (
     <section
       id="evidencia"
-      ref={ref}
       className="relative min-h-screen py-24 bg-precisur-dark-900"
     >
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-5xl mx-auto px-6">
+        {/* Header */}
         <SectionReveal>
           <div className="text-center mb-16">
             <span className="text-xs font-mono text-precisur-cyan uppercase tracking-widest mb-4 block">
               Evidencia de Ingeniería
             </span>
-            <h2 className="font-heading text-4xl md:text-5xl font-bold mb-6">
-              ANTES DE PEDIR CONFIANZA,
+            <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
+              ESTADO DE MADUREZ
               <br />
-              <span className="text-precisur-green">
-                CONSTRUIMOS UNA BASE TÉCNICA
-              </span>
+              <span className="text-precisur-green">TECNOLÓGICA</span>
             </h2>
-            <p className="text-foreground/60 text-lg max-w-2xl mx-auto">
-              Que puede ser inspeccionada, cuestionada y mejorada.
+            <p className="text-foreground/50 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+              El desarrollo de tecnología científica no es binario.
+              Un sistema puede estar implementado, verificado computacionalmente
+              y aún así requerir validación experimental.
             </p>
           </div>
         </SectionReveal>
 
+        {/* Maturity Levels */}
         <SectionReveal delay={0.1}>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-20">
-            {counters.map((c) => (
-              <div key={c.label} className="flex flex-col items-center">
-                <Counter
-                  end={c.end}
-                  label={c.label}
-                  duration={c.duration}
+          <div className="mb-10">
+            {maturityLevels.map((level, i) => (
+              <div key={level.num}>
+                <MaturityLevel
+                  level={level}
+                  index={i}
+                  isActive={activeLevel === i}
+                  onToggle={() => handleToggle(i)}
+                  isDimmed={activeLevel !== null && activeLevel !== i}
                 />
-                <p className="mt-2 text-xs text-foreground/30 font-mono text-center max-w-[140px]">
-                  {c.desc}
-                </p>
+                {/* Insert callout between level 02 and 04 (after index 1) */}
+                {i === 1 && <VerificationCallout />}
               </div>
             ))}
           </div>
         </SectionReveal>
 
-        <SectionReveal delay={0.2}>
-          <div className="mb-16">
-            <h3 className="font-heading text-xl font-semibold text-foreground/70 mb-6 text-center uppercase tracking-wider">
-              Proceso de Ingeniería
-            </h3>
-
-            {/* Desktop: horizontal row */}
-            <div className="hidden md:flex flex-wrap justify-center items-center gap-3">
-              {timeline.map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div
-                    className={`px-4 py-2 rounded border border-current/20 bg-current/5 ${item.color}`}
-                  >
-                    <span className="text-xs font-mono font-semibold">
-                      {item.step}
-                    </span>
-                  </div>
-                  {i < timeline.length - 1 && (
-                    <span className="text-foreground/20">→</span>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Mobile: staircase */}
-            <div className="md:hidden">
-              {timeline.map((item, i) => (
-                <div
-                  key={i}
-                  className="stair-step"
-                  style={{ "--i": i } as React.CSSProperties}
-                >
-                  {/* Step box */}
-                  <div
-                    className={`inline-block px-4 py-2 rounded border border-current/20 bg-current/5 ${item.color}`}
-                  >
-                    <span className="text-xs font-mono font-semibold">
-                      {item.step}
-                    </span>
-                  </div>
-
-                  {/* Connector: vertical + horizontal */}
-                  {i < timeline.length - 1 && (
-                    <div className="stair-connector">
-                      <div className="stair-connector-v" />
-                      <div className="stair-connector-h" />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </SectionReveal>
-
-        <SectionReveal delay={0.3}>
-          <div>
-            <h3 className="font-heading text-xl font-semibold text-foreground/70 mb-8 text-center uppercase tracking-wider">
-              Correcciones Reales
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {bugs.map((bug, i) => (
-                <motion.div
-                  key={i}
-                  whileHover={{ y: -4 }}
-                  className="p-6 rounded-lg border border-precisur-dark-600/30 bg-precisur-dark-800/50"
-                >
-                  <div className={`text-xs font-mono ${bug.color} uppercase tracking-wider mb-2`}>
-                    {bug.title}
-                  </div>
-                  <p className="text-sm text-foreground/50 mb-3">{bug.desc}</p>
-                  <div className="text-xs text-precisur-green/70 font-mono">
-                    ✓ {bug.fix}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </SectionReveal>
+        {/* Final Reflection */}
+        <FinalReflection />
       </div>
     </section>
   );
