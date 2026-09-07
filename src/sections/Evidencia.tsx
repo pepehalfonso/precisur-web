@@ -297,40 +297,88 @@ function VerificationCallout() {
 
 // ─── Final Reflection ─────────────────────────────────────
 function FinalReflection() {
-  const flowSteps = ["IMPLEMENTAR", "VERIFICAR", "INVESTIGAR", "MEDIR", "VALIDAR"];
+  const flowSteps = [
+    { label: "IMPLEMENTAR", color: "text-precisur-green", border: "border-precisur-green/40", bg: "bg-precisur-green/10" },
+    { label: "VERIFICAR", color: "text-precisur-cyan", border: "border-precisur-cyan/40", bg: "bg-precisur-cyan/10" },
+    { label: "INVESTIGAR", color: "text-precisur-orange", border: "border-precisur-orange/40", bg: "bg-precisur-orange/10" },
+    { label: "MEDIR", color: "text-precisur-yellow", border: "border-precisur-yellow/40", bg: "bg-precisur-yellow/10" },
+    { label: "VALIDAR", color: "text-precisur-green", border: "border-precisur-green/40", bg: "bg-precisur-green/10" },
+  ];
 
   return (
     <SectionReveal delay={0.1}>
       <div className="mt-16 md:mt-20">
-        <div className="text-center mb-8">
-          <h3 className="font-heading text-xl font-semibold text-foreground/70 uppercase tracking-wider">
+        <div className="text-center mb-10">
+          <h3 className="font-heading text-xl font-semibold text-foreground/70 uppercase tracking-wider mb-5">
             La Frontera Actual
           </h3>
-        </div>
-        <div className="max-w-2xl mx-auto text-center mb-10">
-          <p className="text-foreground/50 text-sm leading-relaxed mb-4">
-            Precisur no considera la simulación como una sustitución automática de la experimentación.
-            El objetivo es construir modelos computacionales útiles, verificar rigurosamente su comportamiento
-            y avanzar progresivamente hacia su comparación con fenómenos medidos en condiciones reales.
-          </p>
-          <p className="text-foreground/50 text-sm leading-relaxed">
-            La validación experimental no es un detalle pendiente.
-            Es una parte fundamental del proceso de ingeniería.
-          </p>
+          <div className="max-w-2xl mx-auto">
+            <p className="text-foreground/50 text-sm leading-relaxed mb-4">
+              Precisur no considera la simulación como una sustitución automática de la experimentación.
+              El objetivo es construir modelos computacionales útiles, verificar rigurosamente su comportamiento
+              y avanzar progresivamente hacia su comparación con fenómenos medidos en condiciones reales.
+            </p>
+            <p className="text-foreground/50 text-sm leading-relaxed">
+              La validación experimental no es un detalle pendiente.
+              Es una parte fundamental del proceso de ingeniería.
+            </p>
+          </div>
         </div>
 
-        {/* Flow diagram */}
-        <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-0">
-          {flowSteps.map((step, i) => (
-            <div key={step} className="flex items-center gap-2">
-              <div className="px-4 py-2 rounded border border-precisur-dark-600/30 bg-precisur-dark-800/50">
-                <span className="font-mono text-xs text-foreground/50">{step}</span>
-              </div>
-              {i < flowSteps.length - 1 && (
-                <span className="text-foreground/15 text-xs md:rotate-0 rotate-90">↓</span>
-              )}
+        {/* Flow pipeline — Desktop */}
+        <div className="hidden md:block">
+          <div className="relative flex items-center justify-center">
+            {/* Connecting line */}
+            <div className="absolute top-1/2 left-[10%] right-[10%] h-px bg-gradient-to-r from-precisur-green/20 via-precisur-cyan/20 to-precisur-green/20 -translate-y-1/2" />
+
+            {/* Steps */}
+            <div className="relative flex items-center justify-between w-full max-w-3xl">
+              {flowSteps.map((step, i) => (
+                <div key={step.label} className="flex items-center">
+                  <div className={`relative px-5 py-3 rounded border ${step.border} ${step.bg} backdrop-blur-sm`}>
+                    <span className={`font-mono text-xs font-semibold tracking-wider ${step.color}`}>
+                      {step.label}
+                    </span>
+                    {/* Node dot */}
+                    <div className={`absolute -top-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full ${step.color.replace("text-", "bg-")} opacity-60`} />
+                  </div>
+                  {i < flowSteps.length - 1 && (
+                    <div className="w-8 flex items-center justify-center">
+                      <div className="w-full h-px bg-foreground/10" />
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+        </div>
+
+        {/* Flow pipeline — Mobile */}
+        <div className="md:hidden">
+          <div className="relative flex flex-col items-center">
+            {/* Connecting line */}
+            <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-precisur-green/20 via-precisur-cyan/20 to-precisur-green/20" />
+
+            {/* Steps */}
+            <div className="relative flex flex-col items-center gap-1">
+              {flowSteps.map((step, i) => (
+                <div key={step.label} className="flex flex-col items-center">
+                  <div className={`relative px-4 py-2 rounded border ${step.border} ${step.bg}`}>
+                    <span className={`font-mono text-[11px] font-semibold tracking-wider ${step.color}`}>
+                      {step.label}
+                    </span>
+                    {/* Node dot */}
+                    <div className={`absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${step.color.replace("text-", "bg-")} opacity-60`} />
+                  </div>
+                  {i < flowSteps.length - 1 && (
+                    <div className="h-4 flex items-center justify-center">
+                      <div className="w-px h-full bg-foreground/10" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </SectionReveal>
