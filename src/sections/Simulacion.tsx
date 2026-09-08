@@ -22,15 +22,15 @@ export default function Simulacion() {
               <span className="text-precisur-green">DE VOLAR</span>
             </h2>
             <p className="text-foreground/60 text-lg leading-relaxed max-w-lg mb-8">
-              El software calcula la ruta óptima para cubrir el lote
-              minimizando pasadas innecesarias y evitando zonas sensibles.
-              Cada vuelo está planificado antes de despegar.
+              El software genera rutas de cobertura para el lote, minimizando
+              pasadas innecesarias y evitando zonas sensibles. Cada vuelo está
+              planificado antes de despegar.
             </p>
             <div className="space-y-2.5">
               {[
-                "Ruta zigzag automática adaptada a la forma del lote",
+                "Ruta zigzag adaptada a la forma del lote",
                 "Evitación de zonas sensibles y obstáculos",
-                "Cálculo de dosis por superficie en tiempo real",
+                "Estimación de dosis por superficie",
                 "Registro de cobertura para auditoría",
                 "Exportación de datos para gestión agrícola",
               ].map((item, i) => (
@@ -48,7 +48,7 @@ export default function Simulacion() {
             <Counter end={98} suffix="%" label="Cobertura" />
             <Counter end={3} suffix="cm" label="Precisión GPS" />
             <Counter end={4} suffix="ha/h" label="Productividad" />
-            <Counter end={30} suffix="%" label="Ahorro vs manual" />
+            <Counter end={30} suffix="%" label="Reducción de pasadas" />
           </div>
         </SectionReveal>
       </div>

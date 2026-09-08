@@ -28,7 +28,7 @@ const capabilities = [
   },
   {
     title: "OPTIMIZACIÓN",
-    desc: "Análisis de escenarios, comparación de configuraciones y candidatos de operación.",
+    desc: "Análisis de escenarios, comparación de configuraciones y estrategias operativas.",
     color: "text-precisur-violet",
     border: "border-precisur-violet/20",
     bg: "bg-precisur-violet/5",
@@ -57,9 +57,9 @@ export default function Precisur() {
               <span className="text-precisur-green">CONSTRUIDA EN URUGUAY</span>
             </h2>
             <p className="text-foreground/60 text-lg max-w-2xl mx-auto">
-              Precisur no es una idea en una servilleta. Es un sistema con
-              arquitectura modular, motor físico propio y evidencia de
-              ingeniería verificable.
+              Precisur no es un prototipo conceptual. Es un sistema con
+              arquitectura funcional, motor de simulación basado en modelos
+              físicos y evidencia de ingeniería verificable.
             </p>
           </div>
         </SectionReveal>

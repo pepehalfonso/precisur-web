@@ -5,10 +5,10 @@ import { useRef } from "react";
 import SectionReveal from "@/components/SectionReveal";
 
 const forces = [
-  { name: "VIENTO", icon: "→", color: "text-precisur-cyan", desc: "Arrastre horizontal" },
+  { name: "VIENTO", icon: "→", color: "text-precisur-cyan", desc: "Transporte y deriva" },
   { name: "GRAVEDAD", icon: "↓", color: "text-precisur-yellow", desc: "Caída vertical" },
-  { name: "EVAPORACIÓN", icon: "≋", color: "text-precisur-orange", desc: "Pérdida de volumen" },
-  { name: "TURBULENCIA", icon: "∿", color: "text-precisur-violet", desc: "Perturbación atmosférica" },
+  { name: "EVAPORACIÓN", icon: "≋", color: "text-precisur-orange", desc: "Reducción de diámetro" },
+  { name: "TURBULENCIA", icon: "∿", color: "text-precisur-violet", desc: "Fluctuaciones del flujo de aire" },
 ];
 
 export default function ElDesafio() {

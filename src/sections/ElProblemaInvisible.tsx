@@ -87,9 +87,10 @@ export default function ElProblemaInvisible() {
               </h2>
               <p className="text-foreground/60 text-lg leading-relaxed max-w-lg mb-8">
                 Modificar la velocidad del viento, la altura de aplicación o el
-                tamaño de gota cambia completamente el comportamiento de la
-                nube de partículas. Arrastrar producto fuera del área objetivo
-                tiene consecuencias reales.
+                tamaño de gota modifica significativamente el comportamiento de
+                la dispersión de gotas. Producto que se desplaza fuera del área
+                objetivo no contribuye al resultado esperado y puede afectar
+                zonas circundantes.
               </p>
 
               <div className="space-y-5 bg-precisur-dark-900/50 p-6 rounded-lg border border-precisur-dark-600/30">
@@ -123,8 +124,9 @@ export default function ElProblemaInvisible() {
               </div>
 
               <p className="mt-4 text-xs text-foreground/30 font-mono">
-                * Simulación educativa. Valores representativos, no constituyen
-                precisión experimental.
+                Simulación con valores ilustrativos. Los resultados no constituyen
+                una validación experimental ni deben utilizarse como sustituto de
+                mediciones de campo.
               </p>
             </div>
           </SectionReveal>

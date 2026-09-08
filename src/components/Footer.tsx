@@ -37,7 +37,7 @@ export default function Footer() {
               </li>
               <li>
                 <a href="#evidencia" className="hover:text-precisur-green transition-colors">
-                  Evidencia Técnica
+                  Evidencia de Ingeniería
                 </a>
               </li>
             </ul>

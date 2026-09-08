@@ -26,7 +26,7 @@ export default function DeSoftwareACampo() {
         <SectionReveal>
           <div>
             <span className="text-xs font-mono text-precisur-yellow uppercase tracking-widest mb-4 block">
-              La Frontera Actual
+              Del Software al Campo
             </span>
             <h2 className="font-heading text-4xl md:text-5xl font-bold mb-6 leading-tight">
               EL SOFTWARE
@@ -36,7 +36,7 @@ export default function DeSoftwareACampo() {
               <span className="text-foreground/50">EN EL SOFTWARE.</span>
             </h2>
             <p className="text-foreground/60 text-lg leading-relaxed max-w-lg mb-8">
-              El modelo puede ser verificado computacionalmente. Pero la
+              Un modelo puede ser verificado computacionalmente. Pero la
               validación experimental requiere colaboración, infraestructura
               y datos de campo. Esta es la etapa que necesita un ecosistema
               dispuesto a impulsarla.
@@ -47,9 +47,10 @@ export default function DeSoftwareACampo() {
                 <span className="text-precisur-yellow font-semibold">
                   Honestidad técnica:
                 </span>{" "}
-                Precisur no afirma que todos sus modelos están
-                experimentalmente validados. La validación experimental
-                constituye una etapa futura necesaria.
+                Precisur diferencia claramente entre componentes implementados,
+                verificados computacionalmente, en investigación y aquellos que
+                requieren validación experimental. No todos los módulos se
+                encuentran en el mismo estado de desarrollo.
               </p>
             </div>
           </div>

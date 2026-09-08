@@ -286,7 +286,7 @@ function VerificationCallout() {
               </div>
             </div>
             <div className="mt-4 text-[10px] font-mono text-foreground/25 uppercase tracking-wider">
-              Software correcto <span className="text-precisur-cyan/40">≠</span> Modelo confirmado
+              Software correcto <span className="text-precisur-cyan/40">≠</span> Modelo validado
             </div>
           </div>
         </div>
@@ -310,7 +310,7 @@ function FinalReflection() {
       <div className="mt-16 md:mt-20">
         <div className="text-center mb-10">
           <h3 className="font-heading text-xl font-semibold text-foreground/70 uppercase tracking-wider mb-5">
-            La Frontera Actual
+            Estado del Desarrollo
           </h3>
           <div className="max-w-2xl mx-auto">
             <p className="text-foreground/50 text-sm leading-relaxed mb-4">
@@ -319,8 +319,8 @@ function FinalReflection() {
               y avanzar progresivamente hacia su comparación con fenómenos medidos en condiciones reales.
             </p>
             <p className="text-foreground/50 text-sm leading-relaxed">
-              La validación experimental no es un detalle pendiente.
-              Es una parte fundamental del proceso de ingeniería.
+              La validación experimental no es un detalle pendiente. Cada componente
+              del sistema requiere su propio nivel de validación.
             </p>
           </div>
         </div>

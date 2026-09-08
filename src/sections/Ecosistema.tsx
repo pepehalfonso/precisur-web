@@ -88,8 +88,8 @@ export default function Ecosistema() {
               <span className="text-precisur-cyan">CONECTADO</span>
             </h2>
             <p className="text-foreground/60 text-lg max-w-2xl mx-auto">
-              Múltiples fuentes de información convergen en una plataforma
-              de análisis integrado.
+              Meteorología, geometría de lotes, parámetros operativos y modelos
+              físicos convergen en un entorno de análisis unificado.
             </p>
           </div>
         </SectionReveal>

@@ -5,10 +5,10 @@ import { useRef } from "react";
 import SectionReveal from "@/components/SectionReveal";
 
 const assets = [
-  { icon: "🗺", label: "Territorio", desc: "Superficie apta para agricultura" },
-  { icon: "🌾", label: "Producción", desc: "Sector agropecuario relevante" },
+  { icon: "🗺", label: "Territorio", desc: "Extensión agrícola significativa" },
+  { icon: "🌾", label: "Producción", desc: "Sector agropecuario estratégico" },
   { icon: "🏛", label: "Instituciones", desc: "Universidades y centros de investigación" },
-  { icon: "🎓", label: "Talento", desc: "Capital humano formado" },
+  { icon: "🎓", label: "Talento", desc: "Profesionales con formación técnica y científica" },
   { icon: "📡", label: "Infraestructura", desc: "Tecnología emergente" },
 ];
 
@@ -31,10 +31,10 @@ export default function OportunidadParaUruguay() {
               ¿QUÉ OCURRIRÍA SI ESTAS
               <br />
               <span className="text-precisur-green">
-                CAPACIDADES COMENZARÍAN
+                CAPACIDADES CONVERGEN
               </span>
               <br />
-              <span className="text-precisur-green">A TRABAJAR JUNTAS?</span>
+              <span className="text-precisur-green">EN UN MISMO TERRITORIO?</span>
             </h2>
           </div>
         </SectionReveal>
@@ -59,11 +59,10 @@ export default function OportunidadParaUruguay() {
         <SectionReveal delay={0.3}>
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-foreground/60 text-lg leading-relaxed mb-8">
-              Uruguay tiene un sector agropecuario altamente relevante para
-              su economía. El desarrollo de tecnologías propias de agricultura
-              de precisión representa una oportunidad para fortalecer
-              capacidades nacionales, formar talento tecnológico y generar
-              conocimiento local.
+              Uruguay posee un sector agropecuario estratégico para su economía.
+              El desarrollo de tecnologías propias de agricultura de precisión
+              representa una oportunidad para fortalecer capacidades nacionales,
+              formar talento tecnológico y generar conocimiento local.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
               {[

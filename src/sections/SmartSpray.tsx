@@ -14,7 +14,7 @@ const steps = [
   {
     num: "02",
     title: "IDENTIFICACIÓN",
-    desc: "Detección de bordes sensibles y establecimiento de buffers de protección.",
+    desc: "Detección de bordes sensibles y establecimiento de zonas de amortiguación.",
     color: "text-precisur-cyan",
   },
   {
@@ -26,7 +26,7 @@ const steps = [
   {
     num: "04",
     title: "COMPARACIÓN",
-    desc: "Análisis de candidatos considerando cobertura, deriva y exposición.",
+    desc: "Análisis de configuraciones candidatas considerando cobertura, deriva y exposición.",
     color: "text-precisur-violet",
   },
   {
@@ -62,8 +62,9 @@ export default function SmartSpray() {
             </h2>
             <p className="text-foreground/60 text-lg max-w-2xl mx-auto">
               Smart Spray evalúa múltiples configuraciones de aplicación y
-              genera candidatos comparables. No es un piloto automático.
-              Es una herramienta de análisis y optimización en desarrollo.
+              presenta alternativas comparables. No es un sistema autónomo.
+              Es una herramienta de análisis y apoyo a la decisión, actualmente
+              en desarrollo.
             </p>
           </div>
         </SectionReveal>

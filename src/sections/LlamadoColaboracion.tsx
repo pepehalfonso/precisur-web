@@ -41,7 +41,7 @@ export default function LlamadoColaboracion() {
               <span className="text-foreground">DEL FUTURO</span>
               <br />
               <span className="text-foreground/50">
-                NO SE IMPORTA ÚNICAMENTE.
+                NO SE ADQUIERE ÚNICAMENTE.
               </span>
               <br />
               <span className="text-precisur-green">
@@ -61,10 +61,10 @@ export default function LlamadoColaboracion() {
               transition={{ delay: 0.8, duration: 1 }}
               className="text-foreground/50 text-lg max-w-2xl mx-auto mb-12 leading-relaxed"
             >
-              Los proyectos tecnológicos complejos necesitan algo más que una
-              idea. Necesitan conocimiento, infraestructura, validación y
-              colaboración. Precisur ya comenzó a construir la base. El
-              siguiente paso requiere un ecosistema dispuesto a impulsarla.
+              Los proyectos tecnológicos complejos requieren conocimiento,
+              infraestructura, validación y colaboración. Precisur ya construyó
+              una base técnica sólida. El siguiente paso necesita un ecosistema
+              dispuesto a impulsarla.
             </motion.p>
 
             <motion.div
