@@ -48,7 +48,11 @@ export default function Simulacion() {
             <Counter end={8000} label="Gotas máximas" />
             <Counter end={500} suffix="²" label="Resolución grilla" />
             <Counter end={7} label="Modelos físicos" />
-            <Counter end={228} label="Tests end-to-end" />
+            <Counter
+              end={228}
+              label="Tests end-to-end"
+              hint="validación extremo a extremo del motor — todos en verde"
+            />
           </div>
         </SectionReveal>
       </div>

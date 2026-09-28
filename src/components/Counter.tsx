@@ -7,6 +7,7 @@ interface CounterProps {
   end: number;
   suffix?: string;
   label: string;
+  hint?: string;
   duration?: number;
 }
 
@@ -14,6 +15,7 @@ export default function Counter({
   end,
   suffix = "",
   label,
+  hint,
   duration = 2,
 }: CounterProps) {
   const ref = useRef(null);
@@ -51,6 +53,11 @@ export default function Counter({
       <div className="text-sm text-foreground/50 uppercase tracking-wider font-medium">
         {label}
       </div>
+      {hint && (
+        <div className="mt-1 text-[11px] text-foreground/35 leading-snug">
+          {hint}
+        </div>
+      )}
     </motion.div>
   );
 }

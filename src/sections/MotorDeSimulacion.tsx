@@ -71,10 +71,30 @@ const physicsModels = [
 ];
 
 const metrics = [
-  { value: "228", label: "Tests end-to-end", sub: "todos pasan" },
-  { value: "35/35", label: "Auditoría conservación", sub: "de masa" },
-  { value: "109", label: "Tests paridad ICA", sub: "Flutter ↔ Python" },
-  { value: "90", label: "Tests golden", sub: "escenarios de referencia" },
+  {
+    value: "228",
+    label: "Tests end-to-end",
+    sub: "todos pasan",
+    desc: "Validación completa de extremo a extremo: puntuaciones ICA, vetos, riesgos, recomendaciones, determinismo, umbrales de frontera y física — 228 de 228 en verde.",
+  },
+  {
+    value: "35/35",
+    label: "Auditoría conservación",
+    sub: "de masa",
+    desc: "Cada gramo emitido queda contado: depositado, arrastrado o evaporado — nada se pierde ni se inventa. Es verificación contable interna, no validación experimental.",
+  },
+  {
+    value: "109",
+    label: "Tests paridad ICA",
+    sub: "Flutter ↔ Python",
+    desc: "Los mismos 109 casos se calculan en la app (Dart) y en el motor (Python) y deben dar idéntico ICA — la app y el motor nunca divergen.",
+  },
+  {
+    value: "90",
+    label: "Tests golden",
+    sub: "escenarios de referencia",
+    desc: "Escenarios con resultados congelados: si un cambio de física altera un resultado conocido, el test falla. Protección de regresión.",
+  },
 ];
 
 const constants = [
@@ -156,6 +176,9 @@ export default function MotorDeSimulacion() {
                 </div>
                 <div className="text-xs text-foreground/50">{m.label}</div>
                 <div className="text-[10px] text-foreground/30 font-mono">{m.sub}</div>
+                <p className="mt-3 pt-3 border-t border-precisur-dark-600/30 text-left text-[11px] text-foreground/45 leading-relaxed">
+                  {m.desc}
+                </p>
               </motion.div>
             ))}
           </div>

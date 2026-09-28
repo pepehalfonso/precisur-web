@@ -189,8 +189,9 @@ export default function AplicacionMovil() {
                 </div>
                 <p className="text-xs text-foreground/50 leading-relaxed">
                   Motor de reglas embebido en Flutter. Paridad Python ↔ Flutter
-                  verificada con 109 tests. El motor de calidad es puramente
-                  determinista — mismos inputs, mismo resultado.
+                  verificada con 109 tests: los mismos casos calculados en Dart
+                  y en Python deben dar idéntico ICA. El motor de calidad es
+                  puramente determinista — mismos inputs, mismo resultado.
                 </p>
               </div>
             </div>
