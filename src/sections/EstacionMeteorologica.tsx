@@ -62,10 +62,10 @@ const connectivity = [
 ];
 
 const derivedMetrics = [
-  { label: "VPD", desc: "Déficit de presión de vapor", formula: "0.6108 · e^(17.27·T/(T+237.3)) · (1 − RH/100)", optimal: "Óptimo: 0.4–1.2 kPa" },
-  { label: "Punto de Rocío", desc: "Temperatura de condensación", formula: "Td ≈ T − ((100 − RH)/5)", optimal: "Spread > 2°C = favorable" },
-  { label: "Estabilidad", desc: "Clase atmosférica Pasquill-Gifford", formula: "5 clases: muy estable → muy inestable", optimal: "Inversión = veto HARD" },
-  { label: "Precipitación", desc: "Ventana operativa", formula: "minutesUntilRain vs duración estimada", optimal: "Lluvia > 0.5 mm = veto" },
+  { label: "VPD", desc: "Déficit de presión de vapor", formula: "es × (1 − RH/100), es = 0.6108·e^(17.27·T/(T+237.3))", optimal: "Óptimo: 0.4–1.2 kPa" },
+  { label: "Punto de Rocío", desc: "Temperatura de condensación", formula: "Td ≈ T − ((100 − RH) / 5)", optimal: "Spread > 2 °C = favorable" },
+  { label: "Estabilidad", desc: "Clase Pasquill-Gifford", formula: "5 clases: muy estable → muy inestable", optimal: "Inversión = veto HARD" },
+  { label: "Precipitación", desc: "Ventana operativa", formula: "min hasta lluvia vs duración estimada", optimal: "Lluvia > 0.5 mm = veto" },
 ];
 
 const hardware = [
@@ -174,10 +174,10 @@ export default function EstacionMeteorologica() {
                       </span>
                       <span className="text-[10px] text-foreground/30">{m.desc}</span>
                     </div>
-                    <div className="font-mono text-[10px] text-foreground/40 mb-1">
+                    <div className="font-mono text-xs text-foreground/40 mb-1 break-words">
                       {m.formula}
                     </div>
-                    <div className="font-mono text-[10px] text-precisur-cyan">{m.optimal}</div>
+                    <div className="font-mono text-xs text-precisur-cyan">{m.optimal}</div>
                   </div>
                 ))}
               </div>

@@ -9,7 +9,7 @@ const physicsModels = [
     num: "01",
     title: "Velocidad Terminal",
     method: "Stokes + Schiller-Naumann",
-    desc: "Solver iterativo con tres regímenes: Stokes (Re < 1), Schiller-Naumann (Re < 1000) y Newton (Re ≥ 1000, Cd = 0.44).",
+    desc: "Solver iterativo con tres regímenes según el número de Reynolds. Estándar desde 1935.",
     color: "text-precisur-green",
     border: "border-precisur-green/30",
     bg: "bg-precisur-green/5",
@@ -18,7 +18,7 @@ const physicsModels = [
     num: "02",
     title: "Arrastre Aerodinámico",
     method: "Correlación Schiller-Naumann",
-    desc: "Fd = -0.5 · ρ · Cd · A · |V_rel| · (V_rel / |V_rel|). Área de referencia A = π·d²/4. Estándar de la industria desde 1935.",
+    desc: "Fuerza proporcional a la velocidad relativa, el área de la gota y la densidad del aire.",
     color: "text-precisur-cyan",
     border: "border-precisur-cyan/30",
     bg: "bg-precisur-cyan/5",
@@ -26,8 +26,8 @@ const physicsModels = [
   {
     num: "03",
     title: "Evaporación",
-    method: "Ley d² con corrección Ranz-Marshall",
-    desc: "d(d²)/dt = -8 · D_c · (p_sat - p_v) / (ρ_L · L) · Nu. Correlación de Nusselt: Nu = 2.0 + 0.6 · Re^0.5 · Sc^0.33. Presión de saturación Tetens.",
+    method: "Ley d² + Ranz-Marshall",
+    desc: "El cuadrado del diámetro disminuye linealmente. Correlación de Nusselt para transferencia de masa.",
     color: "text-precisur-yellow",
     border: "border-precisur-yellow/30",
     bg: "bg-precisur-yellow/5",
@@ -36,7 +36,7 @@ const physicsModels = [
     num: "04",
     title: "Turbulencia",
     method: "Ruido coherente hash 4D",
-    desc: "Interpolación trilineal con smoothstep sobre vértices de grilla. Intensidad 0.3, escala espacial 10 m, escala temporal 5 s. Proporcional al viento medio.",
+    desc: "Interpolación trilineal con smoothstep. Intensidad 0.3, escala espacial 10 m, temporal 5 s.",
     color: "text-precisur-violet",
     border: "border-precisur-violet/30",
     bg: "bg-precisur-violet/5",
@@ -45,7 +45,7 @@ const physicsModels = [
     num: "05",
     title: "Deposición",
     method: "Capa límite estocástica",
-    desc: "Contacto con el suelo (altura ≤ terreno). Bajo 0.1 m, velocidad hacia abajo con probabilidad de deposición basada en el gradiente.",
+    desc: "Contacto con el suelo y deposición probabilística bajo 0.1 m de altura.",
     color: "text-precisur-orange",
     border: "border-precisur-orange/30",
     bg: "bg-precisur-orange/5",
@@ -54,7 +54,7 @@ const physicsModels = [
     num: "06",
     title: "Distribución de Gotas",
     method: "Log-normal parametrizada por VMD",
-    desc: "σ = ln(span) / (2 × 1.28), μ = ln(VMD) + σ²/2, d = exp(μ + σ × Z) donde Z ~ N(0,1). Span típico 1.5–3.0.",
+    desc: "Diámetro medio volumétrico con span típico 1.5–3.0. Muestreo gaussiano.",
     color: "text-precisur-cyan",
     border: "border-precisur-cyan/30",
     bg: "bg-precisur-cyan/5",
@@ -63,7 +63,7 @@ const physicsModels = [
     num: "07",
     title: "Perfil de Viento",
     method: "Perfil de potencia por paso",
-    desc: "Aplicado en cada paso del loop físico. Convención meteorológica FROM (0° = N, 90° = E). Componentes internos U/Este-positivo, V/Norte-positivo.",
+    desc: "Convención meteorológica FROM. Aplicado en cada paso del loop físico.",
     color: "text-precisur-green",
     border: "border-precisur-green/30",
     bg: "bg-precisur-green/5",
@@ -79,9 +79,9 @@ const metrics = [
 
 const constants = [
   { sym: "g", value: "9.80665 m/s²", desc: "Gravedad" },
-  { sym: "ρ_air", value: "1.204 kg/m³", desc: "Densidad del aire (20°C)" },
-  { sym: "μ_air", value: "1.825×10⁻⁵ Pa·s", desc: "Viscosidad dinámica" },
-  { sym: "ρ_liq", value: "998.0 kg/m³", desc: "Densidad del líquido" },
+  { sym: "ρ aire", value: "1.204 kg/m³", desc: "Densidad del aire" },
+  { sym: "μ aire", value: "1.825e-5 Pa·s", desc: "Viscosidad del aire" },
+  { sym: "ρ líq", value: "998.0 kg/m³", desc: "Densidad del líquido" },
 ];
 
 export default function MotorDeSimulacion() {
@@ -170,10 +170,10 @@ export default function MotorDeSimulacion() {
               </h3>
               <div className="space-y-3">
                 {constants.map((c) => (
-                  <div key={c.sym} className="flex items-center justify-between">
-                    <span className="font-mono text-sm text-precisur-green">{c.sym}</span>
+                  <div key={c.sym} className="flex items-baseline gap-3">
+                    <span className="font-mono text-sm text-precisur-green w-16 shrink-0">{c.sym}</span>
                     <span className="font-mono text-xs text-foreground/50">{c.value}</span>
-                    <span className="text-xs text-foreground/30">{c.desc}</span>
+                    <span className="text-xs text-foreground/30 ml-auto text-right">{c.desc}</span>
                   </div>
                 ))}
               </div>

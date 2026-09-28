@@ -33,7 +33,7 @@ const workflow = [
     step: "05",
     title: "Monitoreo",
     desc: "ICA en vivo, alertas por umbrales, recomendaciones con prioridad y ventana operativa.",
-    color: "precisur-orange",
+    color: "text-precisur-orange",
   },
 ];
 
