@@ -7,7 +7,10 @@ import ElProblemaInvisible from "@/sections/ElProblemaInvisible";
 import LaPregunta from "@/sections/LaPregunta";
 import Precisur from "@/sections/Precisur";
 import Ecosistema from "@/sections/Ecosistema";
+import MotorDeSimulacion from "@/sections/MotorDeSimulacion";
 import Simulacion from "@/sections/Simulacion";
+import EstacionMeteorologica from "@/sections/EstacionMeteorologica";
+import AplicacionMovil from "@/sections/AplicacionMovil";
 import Evidencia from "@/sections/Evidencia";
 import SmartSpray from "@/sections/SmartSpray";
 import DeSoftwareACampo from "@/sections/DeSoftwareACampo";
@@ -26,7 +29,10 @@ export default function Home() {
         <LaPregunta />
         <Precisur />
         <Ecosistema />
+        <MotorDeSimulacion />
         <Simulacion />
+        <EstacionMeteorologica />
+        <AplicacionMovil />
         <Evidencia />
         <SmartSpray />
         <DeSoftwareACampo />

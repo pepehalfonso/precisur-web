@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const sectionIds = [
   "tecnologia",
+  "motor",
   "simulacion",
+  "aplicacion",
   "evidencia",
   "smart-spray",
   "colaboracion",
@@ -46,9 +48,9 @@ export default function Header() {
 
   const navItems = [
     { label: "Tecnología", href: "#tecnologia", id: "tecnologia" },
-    { label: "Simulación", href: "#simulacion", id: "simulacion" },
+    { label: "Motor", href: "#motor", id: "motor" },
+    { label: "App", href: "#aplicacion", id: "aplicacion" },
     { label: "Evidencia", href: "#evidencia", id: "evidencia" },
-    { label: "Smart Spray", href: "#smart-spray", id: "smart-spray" },
     { label: "Colaboración", href: "#colaboracion", id: "colaboracion" },
   ];
 

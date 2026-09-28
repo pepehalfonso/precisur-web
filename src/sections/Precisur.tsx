@@ -6,29 +6,29 @@ import SectionReveal from "@/components/SectionReveal";
 
 const capabilities = [
   {
-    title: "SIMULACIÓN DE DERIVA",
-    desc: "Motor de partículas con gravedad, arrastre, evaporación, turbulencia y deposición.",
+    title: "MOTOR DE SIMULACIÓN",
+    desc: "7 modelos físicos: velocidad terminal, arrastre Schiller-Naumann, evaporación ley d², turbulencia hash 4D, deposición estocástica, distribución log-normal y perfil de viento. Versión 3.0.0.",
     color: "text-precisur-green",
     border: "border-precisur-green/20",
     bg: "bg-precisur-green/5",
   },
   {
-    title: "METEOROLOGÍA",
-    desc: "Integración de datos de viento, temperatura, humedad y condiciones atmosféricas.",
+    title: "MOTOR DE CALIDAD (ICA)",
+    desc: "Índice 0–100 con 5 grupos ponderados: meteorología 30%, deriva 25%, configuración 20%, calidad 15%, entorno 10%. 6 vetos absolutos.",
     color: "text-precisur-cyan",
     border: "border-precisur-cyan/20",
     bg: "bg-precisur-cyan/5",
   },
   {
-    title: "SISTEMAS GEOESPACIALES",
-    desc: "Geometría de lotes, polígonos, rutas, proyecciones y análisis espacial.",
+    title: "APLICACIÓN FLUTTER",
+    desc: "App Android con análisis pre-vuelo, simulación de deriva en mapa, Smart Spray optimizador, monitoreo en vivo y base de datos offline.",
     color: "text-precisur-yellow",
     border: "border-precisur-yellow/20",
     bg: "bg-precisur-yellow/5",
   },
   {
-    title: "OPTIMIZACIÓN",
-    desc: "Análisis de escenarios, comparación de configuraciones y estrategias operativas.",
+    title: "ESTACIÓN ESP32",
+    desc: "Hardware propio: DHT22, BMP280, BH1750 y anemómetro. Conexión BLE/WiFi con fallback automático a Open-Meteo.",
     color: "text-precisur-violet",
     border: "border-precisur-violet/20",
     bg: "bg-precisur-violet/5",

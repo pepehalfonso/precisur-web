@@ -8,31 +8,31 @@ const steps = [
   {
     num: "01",
     title: "LOTE",
-    desc: "Geometría del área de aplicación con bordes y zonas sensibles.",
+    desc: "Geometría del lote en mapa con polígono editable. Zonas sensibles definidas por selección de bordes con prioridad (crítica 1.0 / alta 0.75 / media 0.5 / baja 0.25).",
     color: "text-precisur-green",
   },
   {
     num: "02",
-    title: "IDENTIFICACIÓN",
-    desc: "Detección de bordes sensibles y establecimiento de zonas de amortiguación.",
+    title: "CANDIDATOS",
+    desc: "Hasta 50 candidatos de (ángulo × espaciamiento). Cada uno ejecuta 300 pasos de simulación física real, no heurísticas.",
     color: "text-precisur-cyan",
   },
   {
     num: "03",
     title: "SIMULACIÓN",
-    desc: "Evaluación de múltiples configuraciones bajo condiciones variables.",
+    desc: "Cada candidato corre el CanonicalDriftEngine completo: emisión, arrastre, evaporación, turbulencia y deposición sobre grilla 500×500.",
     color: "text-precisur-yellow",
   },
   {
     num: "04",
-    title: "COMPARACIÓN",
-    desc: "Análisis de configuraciones candidatas considerando cobertura, deriva y exposición.",
+    title: "SCORING",
+    desc: "Score 0–100% ponderado: cobertura 25%, exposición sensible 25%, deriva 15%, área descubierta 15%, solape 10%, tiempo 5%, incertidumbre 5%.",
     color: "text-precisur-violet",
   },
   {
     num: "05",
-    title: "RECOMENDACIÓN",
-    desc: "Presentación de alternativas con métricas de rendimiento y riesgo.",
+    title: "TOP 3",
+    desc: "Presenta las 3 mejores alternativas con orientación, espaciamiento, cobertura, deriva y exposición. El operador selecciona y aplica.",
     color: "text-precisur-orange",
   },
 ];
@@ -61,10 +61,10 @@ export default function SmartSpray() {
               <span className="text-precisur-violet">DECISIONES OPERATIVAS</span>
             </h2>
             <p className="text-foreground/60 text-lg max-w-2xl mx-auto">
-              Smart Spray evalúa múltiples configuraciones de aplicación y
-              presenta alternativas comparables. No es un sistema autónomo.
-              Es una herramienta de análisis y apoyo a la decisión, actualmente
-              en desarrollo.
+              Smart Spray optimiza rutas de aplicación evaluando candidatos con
+              simulación física real. No es un sistema autónomo. Es una
+              herramienta de análisis y apoyo a la decisión, actualmente en
+              desarrollo.
             </p>
           </div>
         </SectionReveal>

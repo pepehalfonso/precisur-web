@@ -5,26 +5,26 @@ import { useRef } from "react";
 import SectionReveal from "@/components/SectionReveal";
 
 const nodes = [
-  { label: "METEOROLOGÍA", x: 50, y: 8, color: "#06b6d4" },
-  { label: "SENSORES", x: 18, y: 28, color: "#22c55e" },
-  { label: "SATÉLITES", x: 82, y: 28, color: "#eab308" },
+  { label: "ESP32", x: 18, y: 14, color: "#22c55e" },
+  { label: "OPEN-METEO", x: 50, y: 8, color: "#06b6d4" },
+  { label: "BACKEND", x: 82, y: 14, color: "#eab308" },
   { label: "PRECISUR", x: 50, y: 50, color: "#22c55e", main: true },
-  { label: "SIMULAR", x: 22, y: 74, color: "#06b6d4" },
-  { label: "ANALIZAR", x: 50, y: 74, color: "#8b5cf6" },
-  { label: "OPTIMIZAR", x: 78, y: 74, color: "#f97316" },
-  { label: "SUGERIR", x: 50, y: 94, color: "#22c55e" },
+  { label: "FLUTTER", x: 15, y: 50, color: "#8b5cf6" },
+  { label: "MOTOR PYTHON", x: 85, y: 50, color: "#06b6d4" },
+  { label: "SIMULAR", x: 22, y: 86, color: "#06b6d4" },
+  { label: "ANALIZAR", x: 50, y: 94, color: "#8b5cf6" },
+  { label: "OPTIMIZAR", x: 78, y: 86, color: "#f97316" },
 ];
 
 const connections: [number, number][] = [
   [0, 3],
   [1, 3],
   [2, 3],
-  [3, 4],
-  [3, 5],
+  [4, 3],
+  [5, 3],
   [3, 6],
-  [4, 7],
-  [5, 7],
-  [6, 7],
+  [3, 7],
+  [3, 8],
 ];
 
 function AnimatedLine({
@@ -88,8 +88,8 @@ export default function Ecosistema() {
               <span className="text-precisur-cyan">CONECTADO</span>
             </h2>
             <p className="text-foreground/60 text-lg max-w-2xl mx-auto">
-              Meteorología, geometría de lotes, parámetros operativos y modelos
-              físicos convergen en un entorno de análisis unificado.
+              Estación meteorológica, backend, app móvil y motor de simulación
+              convergen en una plataforma de análisis unificado.
             </p>
           </div>
         </SectionReveal>
@@ -118,7 +118,7 @@ export default function Ecosistema() {
                   <motion.circle
                     cx={node.x}
                     cy={node.y}
-                    r={node.main ? 3 : node.label === "SUGERIR" ? 2.5 : 2}
+                    r={node.main ? 3 : node.label === "ANALIZAR" ? 2.5 : 2}
                     fill={node.color}
                     fillOpacity={0.2}
                     stroke={node.color}
@@ -129,10 +129,10 @@ export default function Ecosistema() {
                   />
                   <motion.text
                     x={node.x}
-                    y={node.y + (node.main ? 6 : node.label === "SUGERIR" ? 5.5 : 5)}
+                    y={node.y + (node.main ? 6 : node.label === "ANALIZAR" ? 5.5 : 5)}
                     textAnchor="middle"
                     fill={node.color}
-                    fontSize="3.5"
+                    fontSize={node.label.length > 8 ? "2.8" : "3.2"}
                     style={{ fontFamily: "var(--font-mono)" }}
                     opacity={0.8}
                     initial={{ opacity: 0 }}

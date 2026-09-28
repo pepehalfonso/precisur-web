@@ -22,17 +22,17 @@ export default function Simulacion() {
               <span className="text-precisur-green">DE VOLAR</span>
             </h2>
             <p className="text-foreground/60 text-lg leading-relaxed max-w-lg mb-8">
-              El software genera rutas de cobertura para el lote, minimizando
-              pasadas innecesarias y evitando zonas sensibles. Cada vuelo está
-              planificado antes de despegar.
+              El motor calcula la trayectoria de cada gota con física real —
+              arrastre, evaporación, turbulencia y deposición. Genera rutas de
+              cobertura para el lote y evalúa alternativas antes de despegar.
             </p>
             <div className="space-y-2.5">
               {[
-                "Ruta zigzag adaptada a la forma del lote",
-                "Evitación de zonas sensibles y obstáculos",
-                "Estimación de dosis por superficie",
-                "Registro de cobertura para auditoría",
-                "Exportación de datos para gestión agrícola",
+                "Simulación de hasta 8.000 gotas por escenario",
+                "Paso de tiempo físico de 0.01 segundos",
+                "Grilla de concentración y deposición 500×500",
+                "Determinista: misma semilla, mismos resultados",
+                "Compatible con Dart y Python (paridad verificada)",
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-precisur-green shrink-0" />
@@ -45,10 +45,10 @@ export default function Simulacion() {
 
         <SectionReveal delay={0.2}>
           <div className="grid grid-cols-2 gap-6">
-            <Counter end={98} suffix="%" label="Cobertura" />
-            <Counter end={3} suffix="cm" label="Precisión GPS" />
-            <Counter end={4} suffix="ha/h" label="Productividad" />
-            <Counter end={30} suffix="%" label="Reducción de pasadas" />
+            <Counter end={8000} label="Gotas máximas" />
+            <Counter end={500} suffix="²" label="Resolución grilla" />
+            <Counter end={7} label="Modelos físicos" />
+            <Counter end={228} label="Tests end-to-end" />
           </div>
         </SectionReveal>
       </div>
